@@ -193,16 +193,19 @@
   }
 
   
-  /* --- BOLD SECTION GRIDLINES ---
-     Columns in full table:
-     0 role, 1 player, 2..16 stats
-  */
-  thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 1 start */
-  thead th[data-col="7"],  tbody td[data-col="7"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 2 start */
-  thead th[data-col="10"], tbody td[data-col="10"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 3 start */
-  thead th[data-col="11"], tbody td[data-col="11"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 4 start */
-  thead th[data-col="13"], tbody td[data-col="13"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 5 start */
-  thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 6 start */
+/* --- BOLD SECTION GRIDLINES ---
+   Columns in full table:
+   0 role, 1 player, 2..16 stats
+*/
+thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Spiking Errors */
+thead th[data-col="3"],  tbody td[data-col="3"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Ape Kills + Ape Attempts */
+thead th[data-col="5"],  tbody td[data-col="5"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Kills + Attempts */
+
+thead th[data-col="7"],  tbody td[data-col="7"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Kill + Soft + One Touch */
+thead th[data-col="10"], tbody td[data-col="10"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Assists */
+thead th[data-col="11"], tbody td[data-col="11"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Spike + BFs */
+thead th[data-col="13"], tbody td[data-col="13"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Aces */
+thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Errors group */
 
 
   /* -------- ROSTER MODAL -------- */
