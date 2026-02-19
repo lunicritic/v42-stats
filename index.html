@@ -1,124 +1,454 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V4.2 Stat Table</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>V4.2 Stat Grid</title>
 
 <style>
-body{
-background:#000;
-color:#fff;
-font-family:-apple-system;
-margin:0;
-padding:10px;
-}
+  :root{
+    --bg:#000;
+    --grid:#2b2b2b;
+    --head:#101010;
+    --text:#fff;
 
-.wrapper{
-overflow:auto;
-}
+    /* tuned for compactness similar to your sheet screenshot */
+    --headerH: 34px;
+    --rowH: 26px;
+    --playerW: 180px;   /* adjust if you want more/less room for names */
+    --fontH: 10px;      /* header font */
+    --fontB: 12px;      /* body font */
+  }
 
-table{
-border-collapse:collapse;
-min-width:1400px;
-}
+  html, body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system, system-ui, Arial, sans-serif;
+    overflow:hidden; /* no page scrolling */
+  }
 
-th, td{
-border:1px solid #333;
-padding:8px 10px;
-text-align:center;
-font-size:16px;
-min-width:70px;
-}
+  /* Top controls bar */
+  .topbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    padding:10px 10px 8px;
+    border-bottom:1px solid #1b1b1b;
+  }
+  .topbar .group{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .topbar label{
+    font-size:12px;
+    opacity:.9;
+  }
+  input[type="text"], input[type="color"]{
+    height:28px;
+    border-radius:8px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    color:#fff;
+    padding:0 10px;
+    font-size:13px;
+    outline:none;
+  }
+  input[type="color"]{
+    padding:0;
+    width:40px;
+  }
 
-th{
-background:#111;
-position:sticky;
-top:0;
-z-index:2;
-}
+  button{
+    height:30px;
+    border-radius:10px;
+    border:1px solid #2a2a2a;
+    background:#121212;
+    color:#fff;
+    font-size:13px;
+    padding:0 12px;
+  }
+  button:active{ transform:translateY(1px); }
+  button:disabled{ opacity:.45; }
 
-.player{
-position:sticky;
-left:0;
-background:#000;
-text-align:left;
-min-width:200px;
-}
+  .spacer{ flex:1; }
 
-.stat{
-cursor:pointer;
-}
+  /* Table container */
+  .tableWrap{
+    height: calc(100vh - 52px);
+    width: 100vw;
+    overflow:hidden; /* no scroll bars; we aim to fit */
+  }
+
+  table{
+    border-collapse:collapse;
+    table-layout:fixed;
+    width:100vw;
+    height:100%;
+  }
+
+  th, td{
+    border:1px solid var(--grid);
+    text-align:center;
+    padding:0;
+    line-height:1;
+    user-select:none;
+  }
+
+  thead th{
+    background:var(--head);
+    font-weight:700;
+    font-size:var(--fontH);
+    height:var(--headerH);
+  }
+
+  /* Player column */
+  th.player, td.player{
+    width:var(--playerW);
+    text-align:left;
+    padding-left:8px;
+    background:#050505;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:var(--fontB);
+  }
+
+  /* Stat columns: distribute remaining width evenly across 19 stats */
+  th.stat, td.stat{
+    width: calc((100vw - var(--playerW)) / 19);
+  }
+
+  tbody td{
+    height:var(--rowH);
+    font-size:var(--fontB);
+  }
+
+  /* Tap feedback */
+  td.stat:active{
+    background:#0f0;
+    color:#000;
+  }
+
+  /* Team separator rows */
+  tr.sep td{
+    height: 18px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    color:#000;
+    text-align:left;
+    padding-left:10px;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+  }
+
+  /* Small hint on iPad: hide text selection caret */
+  [contenteditable]{
+    -webkit-user-select:text;
+    user-select:text;
+  }
 </style>
 </head>
 
 <body>
 
-<div class="wrapper">
-<table id="grid">
-<thead>
-<tr>
-<th class="player">Player</th>
-<th>Ape Kills</th>
-<th>Ape Attempts</th>
-<th>Ape Errors</th>
-<th>Spike Kills</th>
-<th>Spike Attempts</th>
-<th>Spike Errors</th>
-<th>Kill Blocks</th>
-<th>Stuff Blocks</th>
-<th>Soft Blocks</th>
-<th>Block Errors</th>
-<th>Assists</th>
-<th>Set Errors</th>
-<th>Spike Recs</th>
-<th>Rec Attempts</th>
-<th>BFs</th>
-<th>Receive Errors</th>
-<th>Service Aces</th>
-<th>Serve Errors</th>
-<th>Misc Errors</th>
-</tr>
-</thead>
+<div class="topbar">
+  <div class="group">
+    <label>Team A</label>
+    <input id="teamAName" type="text" value="Team A" />
+    <input id="teamAColor" type="color" value="#b48a7a" title="Team A separator colour" />
+  </div>
 
-<tbody id="body"></tbody>
-</table>
+  <div class="group">
+    <label>Team B</label>
+    <input id="teamBName" type="text" value="Team B" />
+    <input id="teamBColor" type="color" value="#cfc4ff" title="Team B separator colour" />
+  </div>
+
+  <div class="spacer"></div>
+
+  <button id="undoBtn" disabled>Undo</button>
+  <button id="redoBtn" disabled>Redo</button>
+  <button id="resetBtn">Reset</button>
+  <button id="exportBtn">Export CSV</button>
+</div>
+
+<div class="tableWrap">
+  <table id="grid">
+    <thead>
+      <tr>
+        <th class="player">Player</th>
+        <th class="stat">Ape Kills</th>
+        <th class="stat">Ape Attempts</th>
+        <th class="stat">Ape Errors</th>
+        <th class="stat">Spike Kills</th>
+        <th class="stat">Spike Attempts</th>
+        <th class="stat">Spike Errors</th>
+        <th class="stat">Kill Blocks</th>
+        <th class="stat">Stuff Blocks</th>
+        <th class="stat">Soft Blocks</th>
+        <th class="stat">Block Errors</th>
+        <th class="stat">Assists</th>
+        <th class="stat">Set Errors</th>
+        <th class="stat">Spike Recs</th>
+        <th class="stat">Rec Attempts</th>
+        <th class="stat">BFs</th>
+        <th class="stat">Receive Errors</th>
+        <th class="stat">Service Aces</th>
+        <th class="stat">Serve Errors</th>
+        <th class="stat">Misc. Errors</th>
+      </tr>
+    </thead>
+
+    <tbody id="tbody"></tbody>
+  </table>
 </div>
 
 <script>
-const players = [
-"Player 1","Player 2","Player 3","Player 4","Player 5","Player 6",
-"Player 7","Player 8","Player 9","Player 10","Player 11","Player 12",
-"Opponent 1","Opponent 2","Opponent 3","Opponent 4","Opponent 5","Opponent 6",
-"Opponent 7","Opponent 8","Opponent 9","Opponent 10","Opponent 11","Opponent 12"
+/* ---------- config ---------- */
+const STATS = [
+  "Ape Kills","Ape Attempts","Ape Errors",
+  "Spike Kills","Spike Attempts","Spike Errors",
+  "Kill Blocks","Stuff Blocks","Soft Blocks","Block Errors",
+  "Assists","Set Errors",
+  "Spike Recs","Rec Attempts","BFs","Receive Errors",
+  "Service Aces","Serve Errors","Misc. Errors"
 ];
 
-const statsCount = 19;
-const tbody = document.getElementById("body");
+const ROWS_PER_TEAM = 12;
+const TOTAL_ROWS = ROWS_PER_TEAM * 2;
 
-players.forEach(name=>{
-let tr=document.createElement("tr");
-
-let td=document.createElement("td");
-td.className="player";
-td.contentEditable=true;
-td.innerText=name;
-tr.appendChild(td);
-
-for(let i=0;i<statsCount;i++){
-let cell=document.createElement("td");
-cell.className="stat";
-cell.innerText="";
-
-cell.onclick=()=>{
-let v=parseInt(cell.innerText)||0;
-cell.innerText=v+1;
+/* ---------- state ---------- */
+const state = {
+  names: Array.from({length: TOTAL_ROWS}, (_,i)=> i<ROWS_PER_TEAM ? `Player ${i+1}` : `Opponent ${i-ROWS_PER_TEAM+1}`),
+  values: Array.from({length: TOTAL_ROWS}, ()=> Array.from({length: STATS.length}, ()=> 0)),
+  teamAName: "Team A",
+  teamBName: "Team B",
+  teamAColor: "#b48a7a",
+  teamBColor: "#cfc4ff"
 };
 
-tr.appendChild(cell);
+// history for undo/redo
+const undoStack = [];
+const redoStack = [];
+
+/* ---------- helpers ---------- */
+function pushAction(action){
+  undoStack.push(action);
+  redoStack.length = 0;
+  updateUndoRedoButtons();
 }
 
-tbody.appendChild(tr);
+function updateUndoRedoButtons(){
+  document.getElementById("undoBtn").disabled = undoStack.length === 0;
+  document.getElementById("redoBtn").disabled = redoStack.length === 0;
+}
+
+function applyAction(action, direction){
+  // direction: +1 = do, -1 = undo
+  const {r,c,delta} = action;
+  state.values[r][c] = Math.max(0, state.values[r][c] + (delta * direction));
+  const cell = document.getElementById(cellId(r,c));
+  if(cell) cell.textContent = state.values[r][c] ? String(state.values[r][c]) : "";
+}
+
+function cellId(r,c){ return `cell_${r}_${c}`; }
+function nameId(r){ return `name_${r}`; }
+
+function saveToLocal(){
+  try{
+    localStorage.setItem("v42_state", JSON.stringify(state));
+  }catch(e){}
+}
+
+function loadFromLocal(){
+  try{
+    const raw = localStorage.getItem("v42_state");
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+
+    // shallow validation
+    if(parsed && parsed.names && parsed.values){
+      Object.assign(state, parsed);
+    }
+  }catch(e){}
+}
+
+/* ---------- render ---------- */
+function render(){
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+
+  // Team A separator row
+  tbody.appendChild(makeSepRow(state.teamAName, state.teamAColor));
+
+  for(let r=0; r<ROWS_PER_TEAM; r++){
+    tbody.appendChild(makePlayerRow(r));
+  }
+
+  // Team B separator row
+  tbody.appendChild(makeSepRow(state.teamBName, state.teamBColor));
+
+  for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++){
+    tbody.appendChild(makePlayerRow(r));
+  }
+
+  // top inputs
+  const aName = document.getElementById("teamAName");
+  const bName = document.getElementById("teamBName");
+  const aCol  = document.getElementById("teamAColor");
+  const bCol  = document.getElementById("teamBColor");
+
+  aName.value = state.teamAName;
+  bName.value = state.teamBName;
+  aCol.value  = state.teamAColor;
+  bCol.value  = state.teamBColor;
+}
+
+function makeSepRow(label, hex){
+  const tr = document.createElement("tr");
+  tr.className = "sep";
+  const td = document.createElement("td");
+  td.colSpan = 20;
+  td.style.background = hex;
+  td.textContent = label;
+  tr.appendChild(td);
+  return tr;
+}
+
+function makePlayerRow(r){
+  const tr = document.createElement("tr");
+
+  // player name cell (editable)
+  const tdName = document.createElement("td");
+  tdName.className = "player";
+  tdName.contentEditable = "true";
+  tdName.id = nameId(r);
+  tdName.textContent = state.names[r] || "";
+  tdName.addEventListener("input", ()=>{
+    state.names[r] = tdName.textContent.trim();
+    saveToLocal();
+  });
+  tr.appendChild(tdName);
+
+  // stat cells
+  for(let c=0; c<STATS.length; c++){
+    const td = document.createElement("td");
+    td.className = "stat";
+    td.id = cellId(r,c);
+    const v = state.values[r][c];
+    td.textContent = v ? String(v) : "";
+
+    td.addEventListener("click", ()=>{
+      // do +1
+      state.values[r][c] = (state.values[r][c] || 0) + 1;
+      td.textContent = String(state.values[r][c]);
+
+      pushAction({r,c,delta:1});
+      saveToLocal();
+    });
+
+    tr.appendChild(td);
+  }
+
+  return tr;
+}
+
+/* ---------- controls ---------- */
+document.getElementById("undoBtn").addEventListener("click", ()=>{
+  const action = undoStack.pop();
+  if(!action) return;
+  applyAction(action, -1);
+  redoStack.push(action);
+  updateUndoRedoButtons();
+  saveToLocal();
 });
+
+document.getElementById("redoBtn").addEventListener("click", ()=>{
+  const action = redoStack.pop();
+  if(!action) return;
+  applyAction(action, +1);
+  undoStack.push(action);
+  updateUndoRedoButtons();
+  saveToLocal();
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  // reset values only (keep names + team settings)
+  for(let r=0;r<TOTAL_ROWS;r++){
+    for(let c=0;c<STATS.length;c++){
+      state.values[r][c]=0;
+    }
+  }
+  undoStack.length = 0;
+  redoStack.length = 0;
+  updateUndoRedoButtons();
+  render();
+  saveToLocal();
+});
+
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  // CSV with full headers
+  const header = ["Player", ...STATS];
+  const rows = [header];
+
+  // include team markers as rows (optional)
+  rows.push([`== ${state.teamAName} ==`, ...Array(STATS.length).fill("")]);
+  for(let r=0;r<ROWS_PER_TEAM;r++){
+    rows.push([state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+  }
+  rows.push([`== ${state.teamBName} ==`, ...Array(STATS.length).fill("")]);
+  for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
+    rows.push([state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+  }
+
+  const csv = rows.map(row =>
+    row.map(cell => {
+      const s = String(cell ?? "");
+      // escape quotes
+      return `"${s.replaceAll('"','""')}"`;
+    }).join(",")
+  ).join("\n");
+
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `v42_stats_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("teamAName").addEventListener("input", (e)=>{
+  state.teamAName = e.target.value;
+  render();
+  saveToLocal();
+});
+document.getElementById("teamBName").addEventListener("input", (e)=>{
+  state.teamBName = e.target.value;
+  render();
+  saveToLocal();
+});
+document.getElementById("teamAColor").addEventListener("input", (e)=>{
+  state.teamAColor = e.target.value;
+  render();
+  saveToLocal();
+});
+document.getElementById("teamBColor").addEventListener("input", (e)=>{
+  state.teamBColor = e.target.value;
+  render();
+  saveToLocal();
+});
+
+/* ---------- init ---------- */
+loadFromLocal();
+render();
+updateUndoRedoButtons();
 </script>
 
 </body>
