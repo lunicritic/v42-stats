@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V4.2 Stat Table</title>
+
+<style>
+body{
+background:#000;
+color:#fff;
+font-family:-apple-system;
+margin:0;
+padding:10px;
+}
+
+.wrapper{
+overflow:auto;
+}
+
+table{
+border-collapse:collapse;
+min-width:1400px;
+}
+
+th, td{
+border:1px solid #333;
+padding:8px 10px;
+text-align:center;
+font-size:16px;
+min-width:70px;
+}
+
+th{
+background:#111;
+position:sticky;
+top:0;
+z-index:2;
+}
+
+.player{
+position:sticky;
+left:0;
+background:#000;
+text-align:left;
+min-width:200px;
+}
+
+.stat{
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+<table id="grid">
+<thead>
+<tr>
+<th class="player">Player</th>
+<th>Ape Kills</th>
+<th>Ape Attempts</th>
+<th>Ape Errors</th>
+<th>Spike Kills</th>
+<th>Spike Attempts</th>
+<th>Spike Errors</th>
+<th>Kill Blocks</th>
+<th>Stuff Blocks</th>
+<th>Soft Blocks</th>
+<th>Block Errors</th>
+<th>Assists</th>
+<th>Set Errors</th>
+<th>Spike Recs</th>
+<th>Rec Attempts</th>
+<th>BFs</th>
+<th>Receive Errors</th>
+<th>Service Aces</th>
+<th>Serve Errors</th>
+<th>Misc Errors</th>
+</tr>
+</thead>
+
+<tbody id="body"></tbody>
+</table>
+</div>
+
+<script>
+const players = [
+"Player 1","Player 2","Player 3","Player 4","Player 5","Player 6",
+"Player 7","Player 8","Player 9","Player 10","Player 11","Player 12",
+"Opponent 1","Opponent 2","Opponent 3","Opponent 4","Opponent 5","Opponent 6",
+"Opponent 7","Opponent 8","Opponent 9","Opponent 10","Opponent 11","Opponent 12"
+];
+
+const statsCount = 19;
+const tbody = document.getElementById("body");
+
+players.forEach(name=>{
+let tr=document.createElement("tr");
+
+let td=document.createElement("td");
+td.className="player";
+td.contentEditable=true;
+td.innerText=name;
+tr.appendChild(td);
+
+for(let i=0;i<statsCount;i++){
+let cell=document.createElement("td");
+cell.className="stat";
+cell.innerText="";
+
+cell.onclick=()=>{
+let v=parseInt(cell.innerText)||0;
+cell.innerText=v+1;
+};
+
+tr.appendChild(cell);
+}
+
+tbody.appendChild(tr);
+});
+</script>
+
+</body>
+</html>
