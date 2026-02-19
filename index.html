@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>V4.2 Stats</title>
+<title>V4.2 Stat Grid</title>
 
 <style>
   :root{
@@ -13,15 +13,16 @@
     --text:#fff;
 
     --topbarH: 52px;
-    --tabsH: 34px;
 
     --headerH: 34px;
     --rowH: 26px;
 
     --roleW: 40px;
 
-    /* tuned for iPad: keep last column visible */
+    /* tightened a tiny bit to buy width back */
     --playerW: clamp(124px, 13vw, 148px);
+
+    /* misc column reserved width (slightly safer than 56) */
     --miscW: 60px;
 
     --fontH: 10px;
@@ -29,14 +30,9 @@
 
     --accent: #2aa2ff;
 
+    /* bold gridlines */
     --gridBold: #666;
     --gridBoldW: 2px;
-
-    --panel:#0a0a0a;
-    --panel2:#0d0d0d;
-    --stroke:#2a2a2a;
-    --muted:#bdbdbd;
-    --good:#1fe37a;
   }
 
   *{ box-sizing:border-box; }
@@ -47,14 +43,10 @@
     background:var(--bg);
     color:var(--text);
     font-family:-apple-system, system-ui, Arial, sans-serif;
-    overflow:hidden;
+    overflow:hidden; /* no page scroll */
   }
 
-  /* ---------- App views ---------- */
-  .view{ display:none; height:100%; width:100%; }
-  .view.active{ display:block; }
-
-  /* ---------- Topbar ---------- */
+  /* Top controls bar */
   .topbar{
     height: var(--topbarH);
     display:flex;
@@ -64,26 +56,40 @@
     border-bottom:1px solid #1b1b1b;
     flex-wrap:nowrap;
   }
-  .title{
-    font-weight:900;
-    letter-spacing:.2px;
-    font-size:14px;
-    white-space:nowrap;
+  .topbar .group{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:nowrap;
   }
-  .crumb{
+  .topbar label{
     font-size:12px;
-    opacity:.8;
+    opacity:.9;
     white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    max-width:40vw;
   }
-  .spacer{ flex:1; }
+  input[type="text"]{
+    height:28px;
+    border-radius:8px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    color:#fff;
+    padding:0 10px;
+    font-size:13px;
+    outline:none;
+  }
+  input[type="color"]{
+    height:28px;
+    width:40px;
+    border-radius:8px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    padding:0;
+  }
 
   button{
     height:30px;
     border-radius:10px;
-    border:1px solid var(--stroke);
+    border:1px solid #2a2a2a;
     background:#121212;
     color:#fff;
     font-size:13px;
@@ -93,187 +99,13 @@
   button:active{ transform:translateY(1px); }
   button:disabled{ opacity:.45; }
 
-  .btnPrimary{
-    background: var(--accent);
-    border-color: transparent;
-    color:#000;
-    font-weight:900;
-  }
-  .btnDanger{
-    background:#2a0d0d;
-    border-color:#3a1a1a;
-  }
+  .spacer{ flex:1; }
 
-  input[type="text"], input[type="number"]{
-    height:32px;
-    border-radius:10px;
-    border:1px solid var(--stroke);
-    background:var(--panel2);
-    color:#fff;
-    padding:0 10px;
-    font-size:13px;
-    outline:none;
-  }
-  input[type="color"]{
-    height:32px;
-    width:44px;
-    border-radius:10px;
-    border:1px solid var(--stroke);
-    background:var(--panel2);
-    padding:0;
-  }
-  textarea{
-    border-radius:12px;
-    border:1px solid var(--stroke);
-    background:var(--panel2);
-    color:#fff;
-    padding:12px;
-    font-size:13px;
-    line-height:1.25;
-    outline:none;
-    resize:none;
-    width:100%;
-  }
-  .pill{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    height:28px;
-    padding:0 10px;
-    border-radius:999px;
-    border:1px solid var(--stroke);
-    background:#111;
-    font-size:12px;
-    color:#fff;
-  }
-  .muted{ color:var(--muted); opacity:.85; }
-
-  /* ---------- Library layout ---------- */
-  .page{
-    height: calc(100vh - var(--topbarH));
-    width:100vw;
-    padding: 14px 14px 18px;
-    overflow:auto;
-  }
-  .sectionTitle{
-    font-size:13px;
-    font-weight:900;
-    letter-spacing:.2px;
-    margin: 8px 0 10px;
-  }
-  .card{
-    border:1px solid var(--stroke);
-    background: var(--panel);
-    border-radius:16px;
-    padding:12px;
-  }
-  .row{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    flex-wrap:wrap;
-  }
-  .grid2{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
-  }
-  .grid3{
-    display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap:12px;
-  }
-  .list{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .matchItem{
-    border:1px solid var(--stroke);
-    background:#0b0b0b;
-    border-radius:14px;
-    padding:12px;
-    display:flex;
-    gap:12px;
-    align-items:center;
-  }
-  .matchMeta{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-    min-width:0;
-    flex:1;
-  }
-  .matchName{
-    font-weight:900;
-    font-size:13px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .matchSub{
-    font-size:12px;
-    opacity:.8;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .tag{
-    font-size:11px;
-    padding:3px 8px;
-    border-radius:999px;
-    border:1px solid var(--stroke);
-    background:#111;
-    white-space:nowrap;
-  }
-
-  /* ---------- Sheet: set tabs ---------- */
-  .tabsBar{
-    height: var(--tabsH);
-    width:100vw;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding: 0 10px;
-    border-bottom:1px solid #1b1b1b;
-    overflow:hidden;
-  }
-  .tabs{
-    display:flex;
-    gap:6px;
-    align-items:center;
-    overflow:auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px;
-    flex:1;
-  }
-  .tab{
-    height:26px;
-    display:inline-flex;
-    align-items:center;
-    padding:0 10px;
-    border-radius:999px;
-    border:1px solid var(--stroke);
-    background:#111;
-    font-size:12px;
-    white-space:nowrap;
-    user-select:none;
-  }
-  .tab.active{
-    background: var(--accent);
-    border-color: transparent;
-    color:#000;
-    font-weight:900;
-  }
-  .tab.hidden{
-    opacity:.45;
-  }
-
-  /* ---------- Table container ----------
-     Safe-area handled as padding, table uses width:100% */
+  /* Table container
+     IMPORTANT: Safe-area is handled as padding, so table can be width:100% reliably. */
   .tableWrap{
-    height: calc(100vh - var(--topbarH) - var(--tabsH));
-    width:100vw;
+    height: calc(100vh - var(--topbarH));
+    width: 100vw;
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     overflow:hidden;
@@ -282,9 +114,10 @@
   table{
     border-collapse:collapse;
     table-layout:fixed;
-    width:100%;
+    width:100%;   /* <- key fix (no more 100vw mismatch) */
     height:100%;
   }
+
   th, td{
     border:1px solid var(--grid);
     text-align:center;
@@ -292,18 +125,21 @@
     line-height:1;
     user-select:none;
   }
+
   thead th{
     background:var(--head);
     font-weight:700;
     font-size:var(--fontH);
     height:var(--headerH);
   }
+
   th.role, td.role{
     width:var(--roleW);
     background:#050505;
     font-size:var(--fontB);
-    font-weight:800;
+    font-weight:700;
   }
+
   th.player, td.player{
     width:var(--playerW);
     text-align:left;
@@ -313,10 +149,13 @@
     overflow:hidden;
     text-overflow:ellipsis;
     font-size:var(--fontB);
+
+    /* bold divider after Player column */
     border-right: var(--gridBoldW) solid var(--gridBold) !important;
   }
 
-  /* stats size computed from table width */
+  /* --- STAT COLUMN SIZING ---
+     Now computed off table's *actual* width (100% inside safe-area padding). */
   th.stat, td.stat{
     width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 18);
   }
@@ -328,13 +167,18 @@
     height:var(--rowH);
     font-size:var(--fontB);
   }
+
   td.stat{ cursor:pointer; }
-  td.stat:active{ background:#0f0; color:#000; }
+
+  td.stat:active{
+    background:#0f0;
+    color:#000;
+  }
 
   tr.sep td{
     height: 18px;
     font-size: 12px;
-    font-weight: 900;
+    font-weight: 800;
     letter-spacing: .2px;
     color:#000;
     text-align:left;
@@ -343,18 +187,24 @@
     border-bottom: 1px solid #000;
   }
 
-  [contenteditable]{ -webkit-user-select:text; user-select:text; }
+  [contenteditable]{
+    -webkit-user-select:text;
+    user-select:text;
+  }
 
-  /* bold section gridlines by data-col */
-  thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="5"],  tbody td[data-col="5"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="8"],  tbody td[data-col="8"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="12"], tbody td[data-col="12"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="18"], tbody td[data-col="18"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="20"], tbody td[data-col="20"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  /* --- BOLD SECTION GRIDLINES ---
+     Columns in full table:
+     0 role, 1 player, 2..20 stats
+  */
+  thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Apes start */
+  thead th[data-col="5"],  tbody td[data-col="5"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Spikes start */
+  thead th[data-col="8"],  tbody td[data-col="8"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Blocks start */
+  thead th[data-col="12"], tbody td[data-col="12"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Assists start */
+  thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Recs start */
+  thead th[data-col="18"], tbody td[data-col="18"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Serve start */
+  thead th[data-col="20"], tbody td[data-col="20"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Errors emphasis */
 
-  /* ---------- Modal ---------- */
+  /* -------- ROSTER MODAL -------- */
   .modalOverlay{
     position:fixed;
     inset:0;
@@ -364,12 +214,11 @@
     justify-content:center;
     z-index:9999;
   }
-  .modalOverlay.show{ display:flex; }
   .modal{
     width:min(980px, 94vw);
-    height:min(680px, 90vh);
-    background:var(--panel);
-    border:1px solid var(--stroke);
+    height:min(620px, 88vh);
+    background:#0a0a0a;
+    border:1px solid #2a2a2a;
     border-radius:16px;
     display:flex;
     flex-direction:column;
@@ -384,15 +233,40 @@
     justify-content:space-between;
     gap:12px;
   }
-  .modalTitle{ font-size:14px; font-weight:900; letter-spacing:.2px; }
-  .modalSub{ font-size:11px; opacity:.75; margin-top:2px; }
+  .modalTitle{
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .modalSub{
+    font-size:11px;
+    opacity:.75;
+    margin-top:2px;
+  }
   .modalBody{
     padding:14px 16px;
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:10px;
     flex:1;
-    overflow:auto;
+  }
+  .modalBody textarea{
+    flex:1;
+    width:100%;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    color:#fff;
+    padding:12px;
+    font-size:13px;
+    line-height:1.25;
+    outline:none;
+    resize:none;
+    white-space:pre-wrap;
+  }
+  .modalHint{
+    font-size:11px;
+    opacity:.75;
   }
   .modalFooter{
     padding:12px 16px;
@@ -401,459 +275,167 @@
     gap:10px;
     justify-content:flex-end;
   }
-  .split{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
+  .btnPrimary{
+    background:var(--accent);
+    border-color:transparent;
+    color:#000;
+    font-weight:800;
   }
-  .small{ font-size:11px; opacity:.8; }
-  .divider{ height:1px; background:#1f1f1f; margin:4px 0; }
-
-  /* row hide toggles list */
-  .rowToggles{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .toggleRow{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px;
-    border:1px solid var(--stroke);
-    border-radius:12px;
-    background:#0b0b0b;
-  }
-  .toggleRow .left{
-    width:36px;
-    text-align:center;
-    font-weight:900;
-  }
-  .toggleRow .name{
-    flex:1;
-    min-width:0;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    font-size:13px;
-  }
-  .toggleRow .btn{
-    height:28px;
-    padding:0 10px;
-    border-radius:999px;
-    font-size:12px;
-  }
-  .toggleRow.hidden{ opacity:.55; }
 </style>
 </head>
 
 <body>
 
-<!-- ========================= VIEW: LIBRARY ========================= -->
-<div id="viewLibrary" class="view active">
-  <div class="topbar">
-    <div class="title">V4.2 Stats</div>
-    <div class="crumb muted">Library</div>
-    <div class="spacer"></div>
-    <button id="btnNewFromLibrary" class="btnPrimary">+ New</button>
-    <button id="btnManageSchemas">Schemas</button>
+<div class="topbar">
+  <div class="group">
+    <label>Team A</label>
+    <input id="teamAName" type="text" value="Team A" />
+    <input id="teamAColor" type="color" value="#2aa2ff" title="Team A separator colour" />
   </div>
 
-  <div class="page">
-    <div class="sectionTitle">Matches</div>
-    <div class="list" id="matchList"></div>
-
-    <div style="height:16px"></div>
-
-    <div class="card">
-      <div class="sectionTitle" style="margin-top:0">Tips</div>
-      <div class="small muted">
-        • Long-press a match for Rename / Duplicate / Delete.<br/>
-        • Use Roster → Hide rows for compact live statting.<br/>
-        • Export Totals to get a combined CSV across visible sets.
-      </div>
-    </div>
+  <div class="group">
+    <label>Team B</label>
+    <input id="teamBName" type="text" value="Team B" />
+    <input id="teamBColor" type="color" value="#888888" title="Team B separator colour" />
   </div>
+
+  <div class="spacer"></div>
+
+  <button id="rosterBtn">Roster</button>
+  <button id="undoBtn" disabled>Undo</button>
+  <button id="redoBtn" disabled>Redo</button>
+  <button id="resetBtn">Reset</button>
+  <button id="exportBtn">Export CSV</button>
 </div>
 
-<!-- ========================= VIEW: NEW SHEET ========================= -->
-<div id="viewNew" class="view">
-  <div class="topbar">
-    <div class="title">V4.2 Stats</div>
-    <div class="crumb muted">New sheet</div>
-    <div class="spacer"></div>
-    <button id="btnBackToLibrary">Back</button>
-    <button id="btnCreateMatch" class="btnPrimary">Create</button>
-  </div>
+<div class="tableWrap">
+  <table id="grid">
+    <thead>
+      <tr>
+        <th class="role" data-col="0"> </th>
+        <th class="player" data-col="1">Player</th>
 
-  <div class="page">
-    <div class="card">
-      <div class="sectionTitle" style="margin-top:0">Basics</div>
-      <div class="grid2">
-        <div>
-          <div class="small muted">Match name</div>
-          <input id="newMatchName" type="text" placeholder="e.g. RVL Week 4 — Team A vs Team B" />
-        </div>
-        <div>
-          <div class="small muted">Schema preset</div>
-          <select id="newSchemaSelect" style="width:100%;height:32px;border-radius:10px;border:1px solid var(--stroke);background:var(--panel2);color:#fff;padding:0 10px;font-size:13px;outline:none;"></select>
-        </div>
-      </div>
+        <th class="stat" data-col="2">Ape Kills</th>
+        <th class="stat" data-col="3">Ape Attempts</th>
+        <th class="stat" data-col="4">Ape Errors</th>
 
-      <div style="height:12px"></div>
+        <th class="stat" data-col="5">Spike Kills</th>
+        <th class="stat" data-col="6">Spike Attempts</th>
+        <th class="stat" data-col="7">Spike Errors</th>
 
-      <div class="grid3">
-        <div>
-          <div class="small muted">Roster size (per team)</div>
-          <input id="newRosterSize" type="number" min="6" max="20" value="12" />
-        </div>
-        <div>
-          <div class="small muted">Sets (1–5)</div>
-          <input id="newSetsCount" type="number" min="1" max="5" value="5" />
-        </div>
-        <div>
-          <div class="small muted">Start on set</div>
-          <input id="newStartSet" type="number" min="1" max="5" value="1" />
-        </div>
-      </div>
+        <th class="stat" data-col="8">Kill Blocks</th>
+        <th class="stat" data-col="9">Stuff Blocks</th>
+        <th class="stat" data-col="10">Soft Blocks</th>
+        <th class="stat" data-col="11">Block Errors</th>
 
-      <div class="divider"></div>
+        <th class="stat" data-col="12">Assists</th>
+        <th class="stat" data-col="13">Set Errors</th>
 
-      <div class="sectionTitle">Teams</div>
-      <div class="grid2">
-        <div class="card" style="padding:12px;">
-          <div class="row">
-            <span class="pill">Team A</span>
-            <div class="spacer"></div>
-            <input id="newTeamAColor" type="color" value="#2aa2ff" />
-          </div>
-          <div style="height:8px"></div>
-          <input id="newTeamAName" type="text" value="Team A" />
-        </div>
+        <th class="stat" data-col="14">Spike Recs</th>
+        <th class="stat" data-col="15">Rec Attempts</th>
+        <th class="stat" data-col="16">BFs</th>
+        <th class="stat" data-col="17">Receive Errors</th>
 
-        <div class="card" style="padding:12px;">
-          <div class="row">
-            <span class="pill">Team B</span>
-            <div class="spacer"></div>
-            <input id="newTeamBColor" type="color" value="#888888" />
-          </div>
-          <div style="height:8px"></div>
-          <input id="newTeamBName" type="text" value="Team B" />
-        </div>
-      </div>
+        <th class="stat" data-col="18">Service Aces</th>
+        <th class="stat" data-col="19">Serve Errors</th>
 
-      <div style="height:12px"></div>
-
-      <div class="small muted">
-        You can paste rosters after creating (Roster button).
-      </div>
-    </div>
-  </div>
+        <th class="stat misc" data-col="20">Misc. Errors</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
 </div>
 
-<!-- ========================= VIEW: SHEET ========================= -->
-<div id="viewSheet" class="view">
-  <div class="topbar">
-    <div class="title">V4.2 Stats</div>
-    <div class="crumb" id="sheetCrumb"></div>
-    <div class="spacer"></div>
-
-    <button id="btnRoster">Roster</button>
-    <button id="btnUndo" disabled>Undo</button>
-    <button id="btnRedo" disabled>Redo</button>
-    <button id="btnCompact">Compact</button>
-    <button id="btnSettings">Settings</button>
-    <button id="btnExport">Export</button>
-  </div>
-
-  <div class="tabsBar">
-    <div class="tabs" id="setTabs"></div>
-    <button id="btnAddSet" style="height:26px;border-radius:999px;">+</button>
-  </div>
-
-  <div class="tableWrap">
-    <table id="grid">
-      <thead>
-        <tr id="headerRow">
-          <!-- built dynamically -->
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ========================= MODAL: ROSTER ========================= -->
-<div id="modalRoster" class="modalOverlay">
+<!-- Roster modal -->
+<div id="modalOverlay" class="modalOverlay">
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modalHeader">
       <div>
-        <div class="modalTitle">Roster</div>
-        <div class="modalSub">Paste usernames (Team A then Team B), one per line. Hide rows for compact live view.</div>
+        <div class="modalTitle">Paste roster</div>
+        <div class="modalSub">Team A then Team B, one username per line.</div>
       </div>
       <button id="closeRosterTop">Close</button>
     </div>
 
     <div class="modalBody">
-      <div class="split">
-        <div>
-          <div class="small muted">Bulk paste (12 lines = Team A only, 24 lines = A + B)</div>
-          <textarea id="bulkRoster" style="height:240px;" placeholder="gum_umbxll
+      <textarea id="bulkRoster" placeholder="Example:
+gum_umbxll
 lani
-..."></textarea>
-          <div class="row" style="margin-top:10px;">
-            <button id="applyRosterBtn" class="btnPrimary">Apply roster</button>
-            <button id="clearRosterText">Clear</button>
-            <div class="spacer"></div>
-            <span class="small muted">Applies to match (all sets)</span>
-          </div>
-        </div>
-        <div>
-          <div class="small muted">Hide rows (current set only)</div>
-          <div id="rowHideList" class="rowToggles"></div>
-          <div class="row" style="margin-top:10px;">
-            <button id="showAllRows">Show all</button>
-            <button id="hideAllBench">Hide bench</button>
-            <div class="spacer"></div>
-            <span class="small muted">Hidden rows collapse in Compact mode</span>
-          </div>
-        </div>
+...
+(12 lines for Team A)
+...
+(12 lines for Team B)"></textarea>
+      <div class="modalHint">
+        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Extra lines are ignored.
       </div>
     </div>
 
     <div class="modalFooter">
       <button id="closeRosterBottom">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================= MODAL: SETTINGS ========================= -->
-<div id="modalSettings" class="modalOverlay">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modalHeader">
-      <div>
-        <div class="modalTitle">Settings</div>
-        <div class="modalSub">Match info, structure, sets, and data actions.</div>
-      </div>
-      <button id="closeSettingsTop">Close</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="card">
-        <div class="sectionTitle" style="margin-top:0">Match</div>
-        <div class="grid2">
-          <div>
-            <div class="small muted">Match name</div>
-            <input id="setMatchName" type="text" />
-          </div>
-          <div>
-            <div class="small muted">Schema</div>
-            <select id="setSchemaSelect" style="width:100%;height:32px;border-radius:10px;border:1px solid var(--stroke);background:var(--panel2);color:#fff;padding:0 10px;font-size:13px;outline:none;"></select>
-          </div>
-        </div>
-
-        <div style="height:10px"></div>
-
-        <div class="grid2">
-          <div class="card" style="padding:12px;">
-            <div class="row">
-              <span class="pill">Team A</span>
-              <div class="spacer"></div>
-              <input id="setTeamAColor" type="color" />
-            </div>
-            <div style="height:8px"></div>
-            <input id="setTeamAName" type="text" />
-          </div>
-
-          <div class="card" style="padding:12px;">
-            <div class="row">
-              <span class="pill">Team B</span>
-              <div class="spacer"></div>
-              <input id="setTeamBColor" type="color" />
-            </div>
-            <div style="height:8px"></div>
-            <input id="setTeamBName" type="text" />
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="sectionTitle" style="margin-top:0">Structure</div>
-        <div class="grid3">
-          <div>
-            <div class="small muted">Roster size (per team)</div>
-            <input id="setRosterSize" type="number" min="6" max="20" />
-          </div>
-          <div>
-            <div class="small muted">Sets (1–5)</div>
-            <input id="setSetsCount" type="number" min="1" max="5" />
-          </div>
-          <div>
-            <div class="small muted">Misc. col width (px)</div>
-            <input id="setMiscWidth" type="number" min="48" max="80" value="60" />
-          </div>
-        </div>
-
-        <div style="height:10px"></div>
-        <div class="small muted">
-          Changing schema/roster/sets will rebuild the grid. Data is preserved where possible; removed rows/columns are dropped.
-        </div>
-
-        <div class="row" style="margin-top:10px;">
-          <button id="applyStructure" class="btnPrimary">Apply changes</button>
-          <div class="spacer"></div>
-          <button id="resetCurrentSet" class="btnDanger">Reset current set</button>
-          <button id="resetAllSets" class="btnDanger">Reset all sets</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="sectionTitle" style="margin-top:0">File actions</div>
-        <div class="row">
-          <button id="duplicateMatch">Duplicate</button>
-          <button id="deleteMatch" class="btnDanger">Delete</button>
-          <div class="spacer"></div>
-          <button id="backToLibraryFromSettings">Back to Library</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button id="closeSettingsBottom">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================= MODAL: SCHEMAS ========================= -->
-<div id="modalSchemas" class="modalOverlay">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modalHeader">
-      <div>
-        <div class="modalTitle">Schemas</div>
-        <div class="modalSub">Presets for columns. RVL included. You can add your own.</div>
-      </div>
-      <button id="closeSchemasTop">Close</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="card">
-        <div class="sectionTitle" style="margin-top:0">Create / Edit</div>
-        <div class="grid2">
-          <div>
-            <div class="small muted">Schema name</div>
-            <input id="schemaName" type="text" placeholder="e.g. RVL Custom" />
-          </div>
-          <div>
-            <div class="small muted">Load existing</div>
-            <select id="schemaSelect" style="width:100%;height:32px;border-radius:10px;border:1px solid var(--stroke);background:var(--panel2);color:#fff;padding:0 10px;font-size:13px;outline:none;"></select>
-          </div>
-        </div>
-
-        <div style="height:10px"></div>
-        <div class="small muted">Columns (one per line). Blank lines are ignored.</div>
-        <textarea id="schemaColumns" style="height:260px;" placeholder="Spike Kills
-Spike Attempts
-..."></textarea>
-
-        <div class="row" style="margin-top:10px;">
-          <button id="saveSchema" class="btnPrimary">Save schema</button>
-          <button id="newSchema">New</button>
-          <button id="deleteSchema" class="btnDanger">Delete</button>
-          <div class="spacer"></div>
-          <span class="small muted">Schemas are global (affect future matches).</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button id="closeSchemasBottom">Close</button>
+      <button id="applyRosterBtn" class="btnPrimary">Apply roster</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ===========================
-   Storage keys
-=========================== */
-const KEY_MATCHES = "v42_matches_v1";
-const KEY_SCHEMAS = "v42_schemas_v1";
-
-/* ===========================
-   Default schemas (includes RVL)
-=========================== */
-const DEFAULT_SCHEMAS = [
-  {
-    id: "oce_default",
-    name: "OCE Default",
-    columns: [
-      "Ape Kills","Ape Attempts","Ape Errors",
-      "Spike Kills","Spike Attempts","Spike Errors",
-      "Kill Blocks","Stuff Blocks","Soft Blocks","Block Errors",
-      "Assists","Set Errors",
-      "Spike Recs","Rec Attempts","BFs","Receive Errors",
-      "Service Aces","Serve Errors","Misc. Errors"
-    ]
-  },
-  {
-    id: "rvl",
-    name: "RVL",
-    columns: [
-      "Spiking Errors",
-      "Ape Kills",
-      "Ape Attempts",
-      "Spike Kills",
-      "Spike Attempts",
-      "Kill Block",
-      "Stuff Block",
-      "Soft Block",
-      "Assists",
-      "Spike Receives",
-      "BFs",
-      "Aces",
-      "Misc. Errors",
-      "Set Errors",
-      "Serve Errors",
-      "One Touch"
-    ]
-  }
+/* ---------- config ---------- */
+const STATS = [
+  "Ape Kills","Ape Attempts","Ape Errors",
+  "Spike Kills","Spike Attempts","Spike Errors",
+  "Kill Blocks","Stuff Blocks","Soft Blocks","Block Errors",
+  "Assists","Set Errors",
+  "Spike Recs","Rec Attempts","BFs","Receive Errors",
+  "Service Aces","Serve Errors","Misc. Errors"
 ];
 
-/* ===========================
-   Role labels generator
-   Keeps C, V, 3, 4 then 5..N
-=========================== */
-function roleLabelsFor(n){
-  const labels = [];
-  if(n >= 1) labels.push("C");
-  if(n >= 2) labels.push("V");
-  for(let i=3;i<=n;i++) labels.push(String(i));
-  return labels;
+const ROWS_PER_TEAM = 12;
+const TOTAL_ROWS = ROWS_PER_TEAM * 2;
+
+const ROLE_LABELS = ["C","V","3","4","5","6","7","8","9","10","11","12"];
+
+/* ---------- state ---------- */
+const state = {
+  names: Array.from({length: TOTAL_ROWS}, (_,i)=> i<ROWS_PER_TEAM ? `Player ${i+1}` : `Opponent ${i-ROWS_PER_TEAM+1}`),
+  values: Array.from({length: TOTAL_ROWS}, ()=> Array.from({length: STATS.length}, ()=> 0)),
+
+  teamAName: "Team A",
+  teamBName: "Team B",
+  teamAColor: "#2aa2ff",
+  teamBColor: "#888888"
+};
+
+const undoStack = [];
+const redoStack = [];
+
+/* ---------- helpers ---------- */
+function pushAction(action){
+  undoStack.push(action);
+  redoStack.length = 0;
+  updateUndoRedoButtons();
 }
-
-/* ===========================
-   App state
-=========================== */
-let schemas = [];
-let matches = [];
-let currentMatchId = null;
-
-let currentSetIndex = 0;
-let compactMode = false;
-
-let undoStack = [];
-let redoStack = [];
-
-/* ===========================
-   Helpers
-=========================== */
-function uid(){
-  return Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36);
+function updateUndoRedoButtons(){
+  document.getElementById("undoBtn").disabled = undoStack.length === 0;
+  document.getElementById("redoBtn").disabled = redoStack.length === 0;
 }
-function nowISO(){ return new Date().toISOString(); }
-function clampInt(v, min, max){
-  v = parseInt(v, 10);
-  if(Number.isNaN(v)) v = min;
-  return Math.min(max, Math.max(min, v));
+function applyAction(action, direction){
+  const {r,c,delta} = action;
+  state.values[r][c] = Math.max(0, state.values[r][c] + (delta * direction));
+  const cell = document.getElementById(cellId(r,c));
+  if(cell) cell.textContent = state.values[r][c] ? String(state.values[r][c]) : "";
+}
+function cellId(r,c){ return `cell_${r}_${c}`; }
+function nameId(r){ return `name_${r}`; }
+
+function saveToLocal(){
+  try{ localStorage.setItem("v42_state", JSON.stringify(state)); }catch(e){}
+}
+function loadFromLocal(){
+  try{
+    const raw = localStorage.getItem("v42_state");
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.names && parsed.values) Object.assign(state, parsed);
+  }catch(e){}
 }
 function normalizeLines(text){
   return text
@@ -863,592 +445,123 @@ function normalizeLines(text){
     .map(s=>s.trim())
     .filter(s=>s.length>0);
 }
-function deepCopy(obj){
-  return JSON.parse(JSON.stringify(obj));
-}
-function saveAll(){
-  localStorage.setItem(KEY_SCHEMAS, JSON.stringify(schemas));
-  localStorage.setItem(KEY_MATCHES, JSON.stringify(matches));
-}
-function loadAll(){
-  const rawSchemas = localStorage.getItem(KEY_SCHEMAS);
-  const rawMatches = localStorage.getItem(KEY_MATCHES);
 
-  if(rawSchemas){
-    schemas = JSON.parse(rawSchemas);
-  }else{
-    schemas = deepCopy(DEFAULT_SCHEMAS);
-    saveAll();
-  }
-
-  if(rawMatches){
-    matches = JSON.parse(rawMatches);
-  }else{
-    matches = [];
-    saveAll();
-  }
-}
-function getSchemaById(id){
-  return schemas.find(s=>s.id === id) || schemas[0];
-}
-function getMatchById(id){
-  return matches.find(m=>m.id === id);
-}
-
-/* ===========================
-   Views
-=========================== */
-const viewLibrary = document.getElementById("viewLibrary");
-const viewNew = document.getElementById("viewNew");
-const viewSheet = document.getElementById("viewSheet");
-
-function showView(which){
-  for(const v of [viewLibrary, viewNew, viewSheet]) v.classList.remove("active");
-  which.classList.add("active");
-}
-
-/* ===========================
-   Library
-=========================== */
-const matchList = document.getElementById("matchList");
-
-function renderLibrary(){
-  matchList.innerHTML = "";
-
-  if(matches.length === 0){
-    const empty = document.createElement("div");
-    empty.className = "card";
-    empty.innerHTML = `<div class="sectionTitle" style="margin-top:0">No matches yet</div>
-      <div class="small muted">Tap <b>+ New</b> to create your first sheet.</div>`;
-    matchList.appendChild(empty);
-    return;
-  }
-
-  const sorted = [...matches].sort((a,b)=> (b.updatedAt||"").localeCompare(a.updatedAt||""));
-  for(const m of sorted){
-    const schema = getSchemaById(m.schemaId);
-    const item = document.createElement("div");
-    item.className = "matchItem";
-
-    const meta = document.createElement("div");
-    meta.className = "matchMeta";
-
-    const name = document.createElement("div");
-    name.className = "matchName";
-    name.textContent = m.name || "(untitled match)";
-
-    const sub = document.createElement("div");
-    sub.className = "matchSub";
-    sub.textContent = `${schema?.name || "Schema"} • ${m.rosterSize}v roster • ${m.sets?.length || 0} set(s)`;
-
-    const tags = document.createElement("div");
-    tags.className = "row";
-    tags.style.gap = "8px";
-
-    const t1 = document.createElement("span");
-    t1.className = "tag";
-    t1.textContent = m.teamA?.name || "Team A";
-    const t2 = document.createElement("span");
-    t2.className = "tag";
-    t2.textContent = m.teamB?.name || "Team B";
-
-    tags.appendChild(t1); tags.appendChild(t2);
-
-    meta.appendChild(name);
-    meta.appendChild(sub);
-    meta.appendChild(tags);
-
-    const openBtn = document.createElement("button");
-    openBtn.textContent = "Open";
-    openBtn.className = "btnPrimary";
-    openBtn.addEventListener("click", ()=> openMatch(m.id));
-
-    const moreBtn = document.createElement("button");
-    moreBtn.textContent = "•••";
-    moreBtn.addEventListener("click", ()=> matchActions(m.id));
-
-    item.appendChild(meta);
-    item.appendChild(openBtn);
-    item.appendChild(moreBtn);
-
-    matchList.appendChild(item);
-  }
-}
-
-function matchActions(id){
-  const m = getMatchById(id);
-  if(!m) return;
-
-  // simple prompt-based actions (fast + reliable)
-  const action = prompt(
-`Actions for: ${m.name}
-Type one:
-rename
-duplicate
-delete`, "rename");
-  if(!action) return;
-
-  const a = action.trim().toLowerCase();
-  if(a === "rename"){
-    const n = prompt("New match name:", m.name || "");
-    if(n !== null){
-      m.name = n.trim() || "(untitled match)";
-      m.updatedAt = nowISO();
-      saveAll(); renderLibrary();
-    }
-  }else if(a === "duplicate"){
-    const copy = deepCopy(m);
-    copy.id = uid();
-    copy.name = (m.name || "Match") + " (copy)";
-    copy.createdAt = nowISO();
-    copy.updatedAt = nowISO();
-    matches.push(copy);
-    saveAll(); renderLibrary();
-  }else if(a === "delete"){
-    if(confirm("Delete this match? This cannot be undone.")){
-      matches = matches.filter(x=>x.id !== id);
-      saveAll(); renderLibrary();
-    }
-  }
-}
-
-/* ===========================
-   New match
-=========================== */
-const newSchemaSelect = document.getElementById("newSchemaSelect");
-const newMatchName = document.getElementById("newMatchName");
-const newRosterSize = document.getElementById("newRosterSize");
-const newSetsCount = document.getElementById("newSetsCount");
-const newStartSet = document.getElementById("newStartSet");
-
-const newTeamAName = document.getElementById("newTeamAName");
-const newTeamBName = document.getElementById("newTeamBName");
-const newTeamAColor = document.getElementById("newTeamAColor");
-const newTeamBColor = document.getElementById("newTeamBColor");
-
-function populateSchemaSelects(){
-  // new sheet
-  newSchemaSelect.innerHTML = "";
-  // settings schema select
-  setSchemaSelect.innerHTML = "";
-  // schema manager select
-  schemaSelect.innerHTML = "";
-
-  for(const s of schemas){
-    const opt1 = document.createElement("option");
-    opt1.value = s.id;
-    opt1.textContent = s.name;
-    newSchemaSelect.appendChild(opt1);
-
-    const opt2 = opt1.cloneNode(true);
-    setSchemaSelect.appendChild(opt2);
-
-    const opt3 = opt1.cloneNode(true);
-    schemaSelect.appendChild(opt3);
-  }
-}
-
-function createEmptyMatrix(rowsPerTeam, colCount){
-  const totalRows = rowsPerTeam * 2;
-  return Array.from({length: totalRows}, ()=> Array.from({length: colCount}, ()=> 0));
-}
-
-function createMatch(){
-  const schemaId = newSchemaSelect.value;
-  const schema = getSchemaById(schemaId);
-  const rosterSize = clampInt(newRosterSize.value, 6, 20);
-  const setsCount = clampInt(newSetsCount.value, 1, 5);
-  const startSet = clampInt(newStartSet.value, 1, 5);
-
-  const cols = schema.columns;
-  const sets = [];
-  for(let i=0;i<setsCount;i++){
-    sets.push({
-      id: uid(),
-      name: `Set ${i+1}`,
-      hidden: false,
-      values: createEmptyMatrix(rosterSize, cols.length),
-      hiddenRows: Array.from({length: rosterSize*2}, ()=> false) // per-set visibility
-    });
-  }
-
-  const m = {
-    id: uid(),
-    name: (newMatchName.value || "").trim() || "New match",
-    schemaId,
-    // store snapshot of columns for stability
-    columns: cols.slice(),
-    rosterSize,
-    miscWidth: 60,
-
-    teamA: { name: (newTeamAName.value||"Team A").trim() || "Team A", color: newTeamAColor.value || "#2aa2ff" },
-    teamB: { name: (newTeamBName.value||"Team B").trim() || "Team B", color: newTeamBColor.value || "#888888" },
-
-    players: Array.from({length: rosterSize*2}, (_,i)=> i<rosterSize ? `Player ${i+1}` : `Opponent ${i-rosterSize+1}`),
-
-    sets,
-
-    createdAt: nowISO(),
-    updatedAt: nowISO()
-  };
-
-  matches.push(m);
-  saveAll();
-  renderLibrary();
-
-  openMatch(m.id, startSet-1);
-}
-
-/* ===========================
-   Sheet rendering
-=========================== */
-const sheetCrumb = document.getElementById("sheetCrumb");
-const setTabs = document.getElementById("setTabs");
-const headerRow = document.getElementById("headerRow");
-const tbody = document.getElementById("tbody");
-
-function openMatch(id, preferredSetIndex=null){
-  const m = getMatchById(id);
-  if(!m) return;
-  currentMatchId = id;
-
-  currentSetIndex = preferredSetIndex !== null ? Math.max(0, Math.min((m.sets.length-1), preferredSetIndex)) : 0;
-  compactMode = false;
-
-  undoStack = [];
-  redoStack = [];
-  updateUndoRedoButtons();
-
-  // apply misc width to CSS variable for this match
-  document.documentElement.style.setProperty("--miscW", (m.miscWidth || 60) + "px");
-
-  renderSheet();
-  showView(viewSheet);
-}
-
-function currentMatch(){
-  return getMatchById(currentMatchId);
-}
-function currentSet(){
-  const m = currentMatch();
-  if(!m) return null;
-  return m.sets[currentSetIndex];
-}
-
-function renderSheet(){
-  const m = currentMatch();
-  if(!m) return;
-
-  sheetCrumb.textContent = m.name;
-
-  // build headers dynamically from match.columns snapshot
-  buildHeader(m.columns);
-
-  renderSetTabs();
-  renderBody();
-
-  // update compact btn label
-  document.getElementById("btnCompact").textContent = compactMode ? "Full" : "Compact";
-}
-
-function buildHeader(columns){
-  headerRow.innerHTML = "";
-
-  const thRole = document.createElement("th");
-  thRole.className = "role";
-  thRole.dataset.col = "0";
-  thRole.textContent = " ";
-  headerRow.appendChild(thRole);
-
-  const thPlayer = document.createElement("th");
-  thPlayer.className = "player";
-  thPlayer.dataset.col = "1";
-  thPlayer.textContent = "Player";
-  headerRow.appendChild(thPlayer);
-
-  // Column indices for bold separators are tailored to the OCE default.
-  // For custom schemas, we still keep the Player divider and the "errors emphasis" at the end.
-  // (Next iteration: schema grouping metadata to auto-set bold dividers.)
-  columns.forEach((name, i)=>{
-    const th = document.createElement("th");
-    th.className = "stat" + (i === columns.length - 1 ? " misc" : "");
-    // full col index: 2 + i
-    th.dataset.col = String(2 + i);
-    th.textContent = name;
-    headerRow.appendChild(th);
-  });
-
-  // if schema has fewer than 19 columns, stat widths still work because we compute off /18 assumption
-  // so we enforce a fixed visual strategy: we render to 19 "slots" by padding empties if needed.
-  // To keep your perfect compactness, we standardize to 19 columns max (the original layout).
-  // For schemas with <19 columns, we add blank columns (non-clickable) to preserve fit.
-  const target = 19;
-  if(columns.length < target){
-    for(let k=columns.length; k<target; k++){
-      const th = document.createElement("th");
-      th.className = "stat";
-      th.dataset.col = String(2 + k);
-      th.textContent = "";
-      th.style.opacity = "0.35";
-      headerRow.appendChild(th);
-    }
-  }
-  if(columns.length > 19){
-    // Hard cap: live statting needs no-scroll. If >19, we truncate display but keep data.
-    // (Next iteration could add "pages" of columns.)
-    // We'll indicate truncation in the last header.
-    // Table width math assumes 19 slots.
-    // We keep first 19.
-    while(headerRow.children.length > 21){ // role + player + 19 = 21
-      headerRow.removeChild(headerRow.lastChild);
-    }
-    headerRow.lastChild.textContent = "…";
-    headerRow.lastChild.style.opacity = "0.7";
-  }
-}
-
-function renderSetTabs(){
-  const m = currentMatch();
-  if(!m) return;
-  setTabs.innerHTML = "";
-
-  m.sets.forEach((s, i)=>{
-    const tab = document.createElement("div");
-    tab.className = "tab" + (i===currentSetIndex ? " active" : "") + (s.hidden ? " hidden" : "");
-    tab.textContent = s.name || `Set ${i+1}`;
-    tab.addEventListener("click", ()=>{
-      currentSetIndex = i;
-      undoStack = [];
-      redoStack = [];
-      updateUndoRedoButtons();
-      renderSheet();
-    });
-    tab.addEventListener("contextmenu", (e)=> e.preventDefault());
-    tab.addEventListener("dblclick", ()=>{
-      const n = prompt("Rename set:", s.name || "");
-      if(n !== null){
-        s.name = n.trim() || s.name;
-        m.updatedAt = nowISO();
-        saveAll();
-        renderSetTabs();
-      }
-    });
-    tab.addEventListener("mousedown", (e)=>{
-      // long press behavior not reliable; use prompt via double click or settings later
-    });
-    setTabs.appendChild(tab);
-  });
-
-  // Totals tab (virtual)
-  const totalsTab = document.createElement("div");
-  totalsTab.className = "tab" + (currentSetIndex === -1 ? " active" : "");
-  totalsTab.textContent = "Totals";
-  totalsTab.addEventListener("click", ()=>{
-    currentSetIndex = -1;
-    undoStack = [];
-    redoStack = [];
-    updateUndoRedoButtons();
-    renderSheet();
-  });
-  setTabs.appendChild(totalsTab);
-}
-
-function renderBody(){
-  const m = currentMatch();
-  if(!m) return;
-
+/* ---------- render ---------- */
+function render(){
+  const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
 
-  const rosterSize = m.rosterSize;
-  const roles = roleLabelsFor(rosterSize);
+  tbody.appendChild(makeSepRow(state.teamAName, state.teamAColor));
+  for(let r=0; r<ROWS_PER_TEAM; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
 
-  if(currentSetIndex === -1){
-    // Totals view: aggregate across visible sets
-    const totalsValues = computeTotalsMatrix(m);
-    renderTeamBlock(m.teamA, 0, rosterSize, roles, totalsValues, null, true);
-    renderTeamBlock(m.teamB, rosterSize, rosterSize*2, roles, totalsValues, null, true);
-    return;
-  }
+  tbody.appendChild(makeSepRow(state.teamBName, state.teamBColor));
+  for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
 
-  const s = currentSet();
-  if(!s) return;
-
-  renderTeamBlock(m.teamA, 0, rosterSize, roles, s.values, s.hiddenRows, false);
-  renderTeamBlock(m.teamB, rosterSize, rosterSize*2, roles, s.values, s.hiddenRows, false);
-}
-
-function renderTeamBlock(team, startRow, endRow, roles, values, hiddenRows, isTotals){
-  tbody.appendChild(makeSepRow(team.name, team.color));
-
-  for(let r=startRow; r<endRow; r++){
-    const idx = r; // absolute row index
-    const local = r - startRow;
-
-    const isHidden = hiddenRows ? !!hiddenRows[idx] : false;
-    if(compactMode && isHidden && !isTotals) continue;
-
-    const tr = document.createElement("tr");
-    if(isHidden && !isTotals) tr.style.opacity = "0.55";
-
-    const tdRole = document.createElement("td");
-    tdRole.className = "role";
-    tdRole.dataset.col = "0";
-    tdRole.textContent = roles[local] || "";
-    tr.appendChild(tdRole);
-
-    const tdName = document.createElement("td");
-    tdName.className = "player";
-    tdName.dataset.col = "1";
-    tdName.contentEditable = isTotals ? "false" : "true";
-    tdName.textContent = currentMatch().players[idx] || "";
-    tdName.addEventListener("input", ()=>{
-      const m = currentMatch();
-      m.players[idx] = tdName.textContent.trim();
-      m.updatedAt = nowISO();
-      saveAll();
-    });
-    tr.appendChild(tdName);
-
-    const colCount = currentMatch().columns.length;
-    const maxCols = Math.min(19, colCount);
-
-    for(let c=0; c<19; c++){
-      const td = document.createElement("td");
-      td.dataset.col = String(2 + c);
-      td.className = "stat" + (c === 18 ? " misc" : "");
-
-      if(c < maxCols){
-        const v = values[idx][c] || 0;
-        td.textContent = v ? String(v) : "";
-
-        if(!isTotals){
-          td.addEventListener("click", ()=>{
-            // +1
-            const s = currentSet();
-            s.values[idx][c] = (s.values[idx][c] || 0) + 1;
-            td.textContent = String(s.values[idx][c]);
-
-            pushAction({row: idx, col: c, delta: 1});
-            markUpdated();
-          });
-          // long press to subtract (optional later). Keeping simple for now.
-        }else{
-          td.style.cursor = "default";
-        }
-      }else{
-        td.textContent = "";
-        td.style.opacity = "0.2";
-        td.style.cursor = "default";
-      }
-      tr.appendChild(td);
-    }
-
-    tbody.appendChild(tr);
-  }
+  document.getElementById("teamAName").value = state.teamAName;
+  document.getElementById("teamBName").value = state.teamBName;
+  document.getElementById("teamAColor").value = state.teamAColor;
+  document.getElementById("teamBColor").value = state.teamBColor;
 }
 
 function makeSepRow(label, hex){
   const tr = document.createElement("tr");
   tr.className = "sep";
   const td = document.createElement("td");
-  td.colSpan = 21;
+  td.colSpan = 21; // role + player + 19 stats
   td.style.background = hex;
   td.textContent = label;
   tr.appendChild(td);
   return tr;
 }
 
-/* ===========================
-   Totals compute
-=========================== */
-function computeTotalsMatrix(m){
-  const rows = m.rosterSize * 2;
-  const cols = Math.min(19, m.columns.length);
-  const totals = Array.from({length: rows}, ()=> Array.from({length: cols}, ()=> 0));
+function makePlayerRow(r, roleLabel){
+  const tr = document.createElement("tr");
 
-  for(const s of m.sets){
-    if(s.hidden) continue;
-    for(let r=0;r<rows;r++){
-      for(let c=0;c<cols;c++){
-        totals[r][c] += (s.values?.[r]?.[c] || 0);
-      }
-    }
+  const tdRole = document.createElement("td");
+  tdRole.className = "role";
+  tdRole.textContent = roleLabel;
+  tdRole.dataset.col = "0";
+  tr.appendChild(tdRole);
+
+  const tdName = document.createElement("td");
+  tdName.className = "player";
+  tdName.contentEditable = "true";
+  tdName.id = nameId(r);
+  tdName.dataset.col = "1";
+  tdName.textContent = state.names[r] || "";
+  tdName.addEventListener("input", ()=>{
+    state.names[r] = tdName.textContent.trim();
+    saveToLocal();
+  });
+  tr.appendChild(tdName);
+
+  for(let c=0; c<STATS.length; c++){
+    const td = document.createElement("td");
+
+    // Full table column index (0 role, 1 player, stats start at 2)
+    const colIndex = 2 + c;
+
+    td.className = "stat" + (c === STATS.length - 1 ? " misc" : "");
+    td.dataset.col = String(colIndex);
+    td.id = cellId(r,c);
+
+    const v = state.values[r][c];
+    td.textContent = v ? String(v) : "";
+
+    td.addEventListener("click", ()=>{
+      state.values[r][c] = (state.values[r][c] || 0) + 1;
+      td.textContent = String(state.values[r][c]);
+      pushAction({r,c,delta:1});
+      saveToLocal();
+    });
+
+    tr.appendChild(td);
   }
-  return totals;
+  return tr;
 }
 
-/* ===========================
-   Undo/Redo
-=========================== */
-function pushAction(a){
-  undoStack.push(a);
+/* ---------- controls ---------- */
+document.getElementById("undoBtn").addEventListener("click", ()=>{
+  const action = undoStack.pop();
+  if(!action) return;
+  applyAction(action, -1);
+  redoStack.push(action);
+  updateUndoRedoButtons();
+  saveToLocal();
+});
+
+document.getElementById("redoBtn").addEventListener("click", ()=>{
+  const action = redoStack.pop();
+  if(!action) return;
+  applyAction(action, +1);
+  undoStack.push(action);
+  updateUndoRedoButtons();
+  saveToLocal();
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  for(let r=0;r<TOTAL_ROWS;r++){
+    for(let c=0;c<STATS.length;c++) state.values[r][c]=0;
+  }
+  undoStack.length = 0;
   redoStack.length = 0;
   updateUndoRedoButtons();
-}
-function updateUndoRedoButtons(){
-  document.getElementById("btnUndo").disabled = undoStack.length === 0 || currentSetIndex === -1;
-  document.getElementById("btnRedo").disabled = redoStack.length === 0 || currentSetIndex === -1;
-}
-function undo(){
-  if(currentSetIndex === -1) return;
-  const a = undoStack.pop();
-  if(!a) return;
-  const s = currentSet();
-  s.values[a.row][a.col] = Math.max(0, (s.values[a.row][a.col]||0) - a.delta);
-  redoStack.push(a);
-  updateUndoRedoButtons();
-  markUpdated();
-  renderBody();
-}
-function redo(){
-  if(currentSetIndex === -1) return;
-  const a = redoStack.pop();
-  if(!a) return;
-  const s = currentSet();
-  s.values[a.row][a.col] = (s.values[a.row][a.col]||0) + a.delta;
-  undoStack.push(a);
-  updateUndoRedoButtons();
-  markUpdated();
-  renderBody();
-}
+  render();
+  saveToLocal();
+});
 
-/* ===========================
-   Export CSV
-=========================== */
-function exportCSV(mode){
-  const m = currentMatch();
-  if(!m) return;
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  const header = ["Role","Player", ...STATS];
+  const rows = [header];
 
-  const cols = Math.min(19, m.columns.length);
-  const header = ["Role","Player", ...m.columns.slice(0, cols)];
-  // pad to 19 if schema smaller (keep consistent file layout)
-  while(header.length < 2 + 19) header.push("");
-
-  const rosterSize = m.rosterSize;
-  const roles = roleLabelsFor(rosterSize);
-
-  const rows = [];
-  rows.push(header);
-
-  const matrix = (mode === "totals") ? computeTotalsMatrix(m) : currentSet().values;
-
-  // Team A header
-  rows.push([`== ${m.teamA.name} ==`,"", ...Array(19).fill("")]);
-  for(let r=0;r<rosterSize;r++){
-    const arr = [roles[r]||"", m.players[r]||""];
-    for(let c=0;c<19;c++){
-      arr.push(matrix[r][c] ? String(matrix[r][c]) : "");
-    }
-    rows.push(arr);
+  rows.push([`== ${state.teamAName} ==`,"", ...Array(STATS.length).fill("")]);
+  for(let r=0;r<ROWS_PER_TEAM;r++){
+    rows.push([ROLE_LABELS[r], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
   }
-  // Team B header
-  rows.push([`== ${m.teamB.name} ==`,"", ...Array(19).fill("")]);
-  for(let r=rosterSize;r<rosterSize*2;r++){
-    const arr = [roles[r-rosterSize]||"", m.players[r]||""];
-    for(let c=0;c<19;c++){
-      arr.push(matrix[r][c] ? String(matrix[r][c]) : "");
-    }
-    rows.push(arr);
+
+  rows.push([`== ${state.teamBName} ==`,"", ...Array(STATS.length).fill("")]);
+  for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
+    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
   }
 
   const csv = rows.map(row =>
@@ -1459,488 +572,82 @@ function exportCSV(mode){
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-
-  const stamp = new Date().toISOString().slice(0,19).replaceAll(":","-");
-  const suffix = mode === "totals" ? "TOTALS" : (currentSet()?.name || `SET${currentSetIndex+1}`);
-  a.download = `${(m.name||"match").replaceAll("/","-")}__${suffix}__${stamp}.csv`;
-
+  a.download = `v42_stats_${Date.now()}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-}
+});
 
-/* ===========================
-   Modals open/close
-=========================== */
-const modalRoster = document.getElementById("modalRoster");
-const modalSettings = document.getElementById("modalSettings");
-const modalSchemas = document.getElementById("modalSchemas");
+/* Team settings */
+document.getElementById("teamAName").addEventListener("input", (e)=>{
+  state.teamAName = e.target.value;
+  render(); saveToLocal();
+});
+document.getElementById("teamBName").addEventListener("input", (e)=>{
+  state.teamBName = e.target.value;
+  render(); saveToLocal();
+});
+document.getElementById("teamAColor").addEventListener("input", (e)=>{
+  state.teamAColor = e.target.value;
+  render(); saveToLocal();
+});
+document.getElementById("teamBColor").addEventListener("input", (e)=>{
+  state.teamBColor = e.target.value;
+  render(); saveToLocal();
+});
 
-function openModal(el){ el.classList.add("show"); }
-function closeModal(el){ el.classList.remove("show"); }
-
-function markUpdated(){
-  const m = currentMatch();
-  if(!m) return;
-  m.updatedAt = nowISO();
-  saveAll();
-}
-
-/* ===========================
-   Roster modal
-=========================== */
+/* ---------- roster modal ---------- */
+const overlay = document.getElementById("modalOverlay");
+const rosterBtn = document.getElementById("rosterBtn");
+const closeTop = document.getElementById("closeRosterTop");
+const closeBottom = document.getElementById("closeRosterBottom");
+const applyRosterBtn = document.getElementById("applyRosterBtn");
 const bulkRoster = document.getElementById("bulkRoster");
-const rowHideList = document.getElementById("rowHideList");
 
-function renderRowHideList(){
-  rowHideList.innerHTML = "";
-  const m = currentMatch();
-  const s = currentSet();
-  if(!m || !s) return;
-
-  const rosterSize = m.rosterSize;
-  const roles = roleLabelsFor(rosterSize);
-
-  for(let i=0;i<rosterSize*2;i++){
-    const team = (i < rosterSize) ? "A" : "B";
-    const role = roles[i < rosterSize ? i : i-rosterSize] || "";
-    const name = m.players[i] || "";
-    const hidden = !!s.hiddenRows[i];
-
-    const wrap = document.createElement("div");
-    wrap.className = "toggleRow" + (hidden ? " hidden" : "");
-
-    const left = document.createElement("div");
-    left.className = "left";
-    left.textContent = role;
-
-    const nm = document.createElement("div");
-    nm.className = "name";
-    nm.textContent = `${team}: ${name}`;
-
-    const btn = document.createElement("button");
-    btn.className = "btn";
-    btn.style.height = "28px";
-    btn.textContent = hidden ? "Show" : "Hide";
-    btn.addEventListener("click", ()=>{
-      s.hiddenRows[i] = !s.hiddenRows[i];
-      markUpdated();
-      renderRowHideList();
-      renderBody();
-    });
-
-    wrap.appendChild(left);
-    wrap.appendChild(nm);
-    wrap.appendChild(btn);
-
-    rowHideList.appendChild(wrap);
-  }
+function openRoster(){
+  overlay.style.display = "flex";
+  setTimeout(()=> bulkRoster.focus(), 50);
+}
+function closeRoster(){
+  overlay.style.display = "none";
 }
 
-document.getElementById("applyRosterBtn").addEventListener("click", ()=>{
-  const m = currentMatch();
-  if(!m) return;
+rosterBtn.addEventListener("click", openRoster);
+closeTop.addEventListener("click", closeRoster);
+closeBottom.addEventListener("click", closeRoster);
+
+overlay.addEventListener("click", (e)=>{
+  if(e.target === overlay) closeRoster();
+});
+
+applyRosterBtn.addEventListener("click", ()=>{
   const lines = normalizeLines(bulkRoster.value);
-  if(lines.length === 0) return;
+  if(lines.length === 0) { closeRoster(); return; }
 
-  const n = m.rosterSize;
-  for(let i=0;i<Math.min(n, lines.length);i++){
-    m.players[i] = lines[i];
+  for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length);i++){
+    state.names[i] = lines[i];
   }
-  if(lines.length > n){
-    for(let i=0;i<Math.min(n, lines.length-n);i++){
-      m.players[n+i] = lines[n+i];
-    }
-  }
-  markUpdated();
-  renderSheet();
-});
 
-document.getElementById("clearRosterText").addEventListener("click", ()=> bulkRoster.value = "");
-
-document.getElementById("showAllRows").addEventListener("click", ()=>{
-  const s = currentSet();
-  if(!s) return;
-  s.hiddenRows = s.hiddenRows.map(()=>false);
-  markUpdated();
-  renderRowHideList();
-  renderBody();
-});
-
-document.getElementById("hideAllBench").addEventListener("click", ()=>{
-  // heuristic: keep first 6 visible per team, hide rest
-  const m = currentMatch();
-  const s = currentSet();
-  if(!m || !s) return;
-  const n = m.rosterSize;
-  s.hiddenRows = s.hiddenRows.map((_,i)=>{
-    const local = (i<n) ? i : i-n;
-    return local >= 6; // hide bench
-  });
-  markUpdated();
-  renderRowHideList();
-  renderBody();
-});
-
-document.getElementById("closeRosterTop").addEventListener("click", ()=> closeModal(modalRoster));
-document.getElementById("closeRosterBottom").addEventListener("click", ()=> closeModal(modalRoster));
-
-/* ===========================
-   Settings modal
-=========================== */
-const setMatchName = document.getElementById("setMatchName");
-const setSchemaSelect = document.getElementById("setSchemaSelect");
-const setTeamAName = document.getElementById("setTeamAName");
-const setTeamBName = document.getElementById("setTeamBName");
-const setTeamAColor = document.getElementById("setTeamAColor");
-const setTeamBColor = document.getElementById("setTeamBColor");
-const setRosterSize = document.getElementById("setRosterSize");
-const setSetsCount = document.getElementById("setSetsCount");
-const setMiscWidth = document.getElementById("setMiscWidth");
-
-function loadSettingsFields(){
-  const m = currentMatch();
-  if(!m) return;
-  setMatchName.value = m.name || "";
-  setSchemaSelect.value = m.schemaId;
-  setTeamAName.value = m.teamA.name;
-  setTeamBName.value = m.teamB.name;
-  setTeamAColor.value = m.teamA.color;
-  setTeamBColor.value = m.teamB.color;
-  setRosterSize.value = m.rosterSize;
-  setSetsCount.value = m.sets.length;
-  setMiscWidth.value = m.miscWidth || 60;
-}
-
-document.getElementById("applyStructure").addEventListener("click", ()=>{
-  const m = currentMatch();
-  if(!m) return;
-
-  // match-level fields
-  m.name = (setMatchName.value||"").trim() || m.name;
-  m.teamA.name = (setTeamAName.value||"Team A").trim() || "Team A";
-  m.teamB.name = (setTeamBName.value||"Team B").trim() || "Team B";
-  m.teamA.color = setTeamAColor.value || m.teamA.color;
-  m.teamB.color = setTeamBColor.value || m.teamB.color;
-
-  const newSchemaId = setSchemaSelect.value;
-  const newRoster = clampInt(setRosterSize.value, 6, 20);
-  const newSets = clampInt(setSetsCount.value, 1, 5);
-  const newMisc = clampInt(setMiscWidth.value, 48, 80);
-
-  // schema snapshot update
-  if(newSchemaId !== m.schemaId){
-    const schema = getSchemaById(newSchemaId);
-    m.schemaId = newSchemaId;
-    m.columns = schema.columns.slice(); // snapshot
-  }
-  m.miscWidth = newMisc;
-  document.documentElement.style.setProperty("--miscW", newMisc + "px");
-
-  // roster resize: preserve existing names + data where possible
-  if(newRoster !== m.rosterSize){
-    const oldRoster = m.rosterSize;
-    const oldPlayers = m.players.slice();
-    m.rosterSize = newRoster;
-    const total = newRoster * 2;
-    m.players = Array.from({length: total}, (_,i)=>{
-      if(i < oldPlayers.length) return oldPlayers[i];
-      return i<newRoster ? `Player ${i+1}` : `Opponent ${i-newRoster+1}`;
-    });
-
-    // resize each set matrix + hidden rows
-    for(const s of m.sets){
-      s.values = resizeMatrix(s.values, oldRoster*2, newRoster*2, m.columns.length);
-      s.hiddenRows = resizeBoolArray(s.hiddenRows, oldRoster*2, newRoster*2, false);
-    }
-  }else{
-    // columns may have changed; ensure matrices align
-    for(const s of m.sets){
-      s.values = resizeCols(s.values, m.columns.length);
+  if(lines.length > ROWS_PER_TEAM){
+    for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length-ROWS_PER_TEAM);i++){
+      state.names[ROWS_PER_TEAM + i] = lines[ROWS_PER_TEAM + i];
     }
   }
 
-  // sets count adjust
-  if(newSets !== m.sets.length){
-    if(newSets > m.sets.length){
-      const add = newSets - m.sets.length;
-      for(let i=0;i<add;i++){
-        m.sets.push({
-          id: uid(),
-          name: `Set ${m.sets.length + 1}`,
-          hidden: false,
-          values: createEmptyMatrix(m.rosterSize, m.columns.length),
-          hiddenRows: Array.from({length: m.rosterSize*2}, ()=> false)
-        });
-      }
-    }else{
-      // truncate sets
-      m.sets = m.sets.slice(0, newSets);
-      if(currentSetIndex >= newSets) currentSetIndex = newSets - 1;
-      if(currentSetIndex === -1) currentSetIndex = 0;
-    }
-  }
-
-  markUpdated();
-  undoStack = [];
-  redoStack = [];
-  updateUndoRedoButtons();
-
-  renderSheet();
-  closeModal(modalSettings);
+  render();
+  saveToLocal();
+  closeRoster();
 });
 
-function resizeBoolArray(arr, oldLen, newLen, fill=false){
-  const out = Array.from({length:newLen}, (_,i)=> (arr && i<arr.length ? !!arr[i] : fill));
-  return out;
-}
-function resizeCols(matrix, newColCount){
-  const rows = matrix.length;
-  const out = Array.from({length: rows}, (_,r)=>{
-    const row = matrix[r] || [];
-    const newRow = [];
-    for(let c=0;c<newColCount;c++){
-      newRow[c] = row[c] || 0;
-    }
-    return newRow;
-  });
-  return out;
-}
-function resizeMatrix(oldMatrix, oldRows, newRows, newCols){
-  const out = Array.from({length:newRows}, (_,r)=>{
-    const row = oldMatrix?.[r] || [];
-    const newRow = [];
-    for(let c=0;c<newCols;c++){
-      newRow[c] = row[c] || 0;
-    }
-    return newRow;
-  });
-  return out;
-}
-
-document.getElementById("resetCurrentSet").addEventListener("click", ()=>{
-  if(currentSetIndex === -1) return;
-  if(!confirm("Reset current set stats?")) return;
-  const m = currentMatch();
-  const s = currentSet();
-  s.values = createEmptyMatrix(m.rosterSize, m.columns.length);
-  undoStack = []; redoStack = [];
-  updateUndoRedoButtons();
-  markUpdated();
-  renderBody();
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && overlay.style.display === "flex") closeRoster();
 });
 
-document.getElementById("resetAllSets").addEventListener("click", ()=>{
-  if(!confirm("Reset ALL sets stats?")) return;
-  const m = currentMatch();
-  for(const s of m.sets){
-    s.values = createEmptyMatrix(m.rosterSize, m.columns.length);
-  }
-  undoStack = []; redoStack = [];
-  updateUndoRedoButtons();
-  markUpdated();
-  renderBody();
-});
-
-document.getElementById("duplicateMatch").addEventListener("click", ()=>{
-  const m = currentMatch();
-  if(!m) return;
-  const copy = deepCopy(m);
-  copy.id = uid();
-  copy.name = (m.name || "Match") + " (copy)";
-  copy.createdAt = nowISO();
-  copy.updatedAt = nowISO();
-  matches.push(copy);
-  saveAll();
-  alert("Duplicated. You'll see it in Library.");
-});
-
-document.getElementById("deleteMatch").addEventListener("click", ()=>{
-  const m = currentMatch();
-  if(!m) return;
-  if(!confirm("Delete this match? This cannot be undone.")) return;
-  matches = matches.filter(x=>x.id !== m.id);
-  saveAll();
-  closeModal(modalSettings);
-  showView(viewLibrary);
-  renderLibrary();
-});
-
-document.getElementById("backToLibraryFromSettings").addEventListener("click", ()=>{
-  closeModal(modalSettings);
-  showView(viewLibrary);
-  renderLibrary();
-});
-
-document.getElementById("closeSettingsTop").addEventListener("click", ()=> closeModal(modalSettings));
-document.getElementById("closeSettingsBottom").addEventListener("click", ()=> closeModal(modalSettings));
-
-/* ===========================
-   Schemas modal
-=========================== */
-const schemaName = document.getElementById("schemaName");
-const schemaSelect = document.getElementById("schemaSelect");
-const schemaColumns = document.getElementById("schemaColumns");
-
-function loadSchemaEditor(id){
-  const s = getSchemaById(id);
-  schemaName.value = s.name || "";
-  schemaSelect.value = s.id;
-  schemaColumns.value = (s.columns || []).join("\n");
-}
-
-document.getElementById("saveSchema").addEventListener("click", ()=>{
-  const name = (schemaName.value||"").trim();
-  if(!name){ alert("Schema name required."); return; }
-  const cols = normalizeLines(schemaColumns.value);
-  if(cols.length === 0){ alert("Add at least 1 column."); return; }
-
-  const selectedId = schemaSelect.value;
-  const existing = schemas.find(x=>x.id === selectedId);
-
-  if(existing){
-    existing.name = name;
-    existing.columns = cols;
-  }else{
-    schemas.push({ id: uid(), name, columns: cols });
-  }
-
-  saveAll();
-  populateSchemaSelects();
-  loadSchemaEditor(schemas[0].id);
-  alert("Saved schema.");
-});
-
-document.getElementById("newSchema").addEventListener("click", ()=>{
-  schemaName.value = "";
-  schemaColumns.value = "";
-  // set select to none (not supported easily); keep current
-});
-
-document.getElementById("deleteSchema").addEventListener("click", ()=>{
-  const id = schemaSelect.value;
-  const s = getSchemaById(id);
-  if(!s) return;
-  if(DEFAULT_SCHEMAS.some(d=>d.id === id)){
-    alert("Default schemas can't be deleted.");
-    return;
-  }
-  if(!confirm(`Delete schema "${s.name}"?`)) return;
-  schemas = schemas.filter(x=>x.id !== id);
-  saveAll();
-  populateSchemaSelects();
-  loadSchemaEditor(schemas[0].id);
-});
-
-schemaSelect.addEventListener("change", ()=> loadSchemaEditor(schemaSelect.value));
-
-document.getElementById("closeSchemasTop").addEventListener("click", ()=> closeModal(modalSchemas));
-document.getElementById("closeSchemasBottom").addEventListener("click", ()=> closeModal(modalSchemas));
-
-/* ===========================
-   Sheet controls
-=========================== */
-document.getElementById("btnUndo").addEventListener("click", undo);
-document.getElementById("btnRedo").addEventListener("click", redo);
-
-document.getElementById("btnRoster").addEventListener("click", ()=>{
-  if(currentSetIndex === -1){
-    alert("Roster is per match / per set. Switch to a set first.");
-    return;
-  }
-  renderRowHideList();
-  openModal(modalRoster);
-});
-
-document.getElementById("btnCompact").addEventListener("click", ()=>{
-  compactMode = !compactMode;
-  renderBody();
-  document.getElementById("btnCompact").textContent = compactMode ? "Full" : "Compact";
-});
-
-document.getElementById("btnSettings").addEventListener("click", ()=>{
-  loadSettingsFields();
-  openModal(modalSettings);
-});
-
-document.getElementById("btnExport").addEventListener("click", ()=>{
-  if(currentSetIndex === -1){
-    exportCSV("totals");
-    return;
-  }
-  const choice = prompt("Export what? Type: set  OR  totals", "set");
-  if(!choice) return;
-  const c = choice.trim().toLowerCase();
-  if(c === "totals") exportCSV("totals");
-  else exportCSV("set");
-});
-
-document.getElementById("btnAddSet").addEventListener("click", ()=>{
-  const m = currentMatch();
-  if(!m) return;
-  if(m.sets.length >= 5){
-    alert("Max 5 sets for now (no-scroll design).");
-    return;
-  }
-  m.sets.push({
-    id: uid(),
-    name: `Set ${m.sets.length + 1}`,
-    hidden: false,
-    values: createEmptyMatrix(m.rosterSize, m.columns.length),
-    hiddenRows: Array.from({length: m.rosterSize*2}, ()=> false)
-  });
-  markUpdated();
-  renderSheet();
-});
-
-/* ===========================
-   Library buttons
-=========================== */
-document.getElementById("btnNewFromLibrary").addEventListener("click", ()=>{
-  // defaults
-  newMatchName.value = "";
-  newRosterSize.value = 12;
-  newSetsCount.value = 5;
-  newStartSet.value = 1;
-  newTeamAName.value = "Team A";
-  newTeamBName.value = "Team B";
-  newTeamAColor.value = "#2aa2ff";
-  newTeamBColor.value = "#888888";
-  newSchemaSelect.value = schemas[0]?.id || "oce_default";
-
-  showView(viewNew);
-});
-
-document.getElementById("btnBackToLibrary").addEventListener("click", ()=>{
-  showView(viewLibrary);
-  renderLibrary();
-});
-
-document.getElementById("btnCreateMatch").addEventListener("click", createMatch);
-
-document.getElementById("btnManageSchemas").addEventListener("click", ()=>{
-  populateSchemaSelects();
-  loadSchemaEditor(schemas[0].id);
-  openModal(modalSchemas);
-});
-
-/* ===========================
-   Init
-=========================== */
-loadAll();
-populateSchemaSelects();
-renderLibrary();
-
-/* Close modals on overlay tap */
-[modalRoster, modalSettings, modalSchemas].forEach(modal=>{
-  modal.addEventListener("click", (e)=>{
-    if(e.target === modal) closeModal(modal);
-  });
-});
-
-/* Prevent iOS selection weirdness on double taps */
-document.addEventListener("touchstart", ()=>{}, {passive:true});
+/* ---------- init ---------- */
+loadFromLocal();
+render();
+updateUndoRedoButtons();
 </script>
 
 </body>
