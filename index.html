@@ -12,16 +12,16 @@
     --head:#101010;
     --text:#fff;
 
-    /* tuned compactness */
     --headerH: 34px;
     --rowH: 26px;
 
-    /* NEW: slightly tighter to help Misc Errors fit */
     --roleW: 40px;
     --playerW: 160px;
 
-    --fontH: 10px;  /* header */
-    --fontB: 12px;  /* body */
+    --fontH: 10px;
+    --fontB: 12px;
+
+    --accent: #2aa2ff; /* used for highlighted Apply button */
   }
 
   html, body{
@@ -30,7 +30,7 @@
     background:var(--bg);
     color:var(--text);
     font-family:-apple-system, system-ui, Arial, sans-serif;
-    overflow:hidden;
+    overflow:hidden; /* no page scroll */
   }
 
   /* Top controls bar */
@@ -53,7 +53,7 @@
     opacity:.9;
     white-space:nowrap;
   }
-  input[type="text"], textarea{
+  input[type="text"]{
     height:28px;
     border-radius:8px;
     border:1px solid #2a2a2a;
@@ -87,43 +87,9 @@
 
   .spacer{ flex:1; }
 
-  /* Bulk paste panel */
-  .bulkPanel{
-    display:flex;
-    gap:10px;
-    align-items:flex-start;
-    padding:8px 10px 10px;
-    border-bottom:1px solid #1b1b1b;
-  }
-  .bulkPanel .box{
-    flex:1;
-    min-width:260px;
-  }
-  .bulkPanel textarea{
-    width:100%;
-    height:86px;
-    padding:8px 10px;
-    border-radius:10px;
-    resize:none;
-    line-height:1.15;
-    font-size:12px;
-    white-space:pre-wrap;
-  }
-  .bulkPanel .hint{
-    font-size:11px;
-    opacity:.75;
-    margin-top:6px;
-  }
-  .bulkPanel .actions{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    padding-top:2px;
-  }
-
   /* Table container */
   .tableWrap{
-    height: calc(100vh - 52px - 118px); /* topbar + bulkPanel */
+    height: calc(100vh - 52px); /* only topbar */
     width: 100vw;
     overflow:hidden;
   }
@@ -150,7 +116,6 @@
     height:var(--headerH);
   }
 
-  /* Role column */
   th.role, td.role{
     width:var(--roleW);
     background:#050505;
@@ -158,7 +123,6 @@
     font-weight:700;
   }
 
-  /* Player column */
   th.player, td.player{
     width:var(--playerW);
     text-align:left;
@@ -170,7 +134,6 @@
     font-size:var(--fontB);
   }
 
-  /* Stat columns: distribute remaining width evenly across 19 stats */
   th.stat, td.stat{
     width: calc((100vw - var(--roleW) - var(--playerW)) / 19);
   }
@@ -180,16 +143,13 @@
     font-size:var(--fontB);
   }
 
-  td.stat{
-    cursor:pointer;
-  }
+  td.stat{ cursor:pointer; }
 
   td.stat:active{
     background:#0f0;
     color:#000;
   }
 
-  /* Team separator rows */
   tr.sep td{
     height: 18px;
     font-size: 12px;
@@ -206,6 +166,84 @@
     -webkit-user-select:text;
     user-select:text;
   }
+
+  /* -------- ROSTER MODAL -------- */
+  .modalOverlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+  }
+  .modal{
+    width:min(980px, 94vw);
+    height:min(620px, 88vh);
+    background:#0a0a0a;
+    border:1px solid #2a2a2a;
+    border-radius:16px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 20px 70px rgba(0,0,0,.65);
+  }
+  .modalHeader{
+    padding:14px 16px;
+    border-bottom:1px solid #1f1f1f;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .modalTitle{
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .modalSub{
+    font-size:11px;
+    opacity:.75;
+    margin-top:2px;
+  }
+  .modalBody{
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    flex:1;
+  }
+  .modalBody textarea{
+    flex:1;
+    width:100%;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    color:#fff;
+    padding:12px;
+    font-size:13px;
+    line-height:1.25;
+    outline:none;
+    resize:none;
+    white-space:pre-wrap;
+  }
+  .modalHint{
+    font-size:11px;
+    opacity:.75;
+  }
+  .modalFooter{
+    padding:12px 16px;
+    border-top:1px solid #1f1f1f;
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+  }
+  .btnPrimary{
+    background:var(--accent);
+    border-color:transparent;
+    color:#000;
+    font-weight:800;
+  }
 </style>
 </head>
 
@@ -216,49 +254,21 @@
     <label>Team A</label>
     <input id="teamAName" type="text" value="Team A" />
     <input id="teamAColor" type="color" value="#2aa2ff" title="Team A separator colour" />
-    <label>Captain</label>
-    <input id="teamACap" type="text" placeholder="C username" />
-    <label>Vice</label>
-    <input id="teamAVice" type="text" placeholder="V username" />
   </div>
 
   <div class="group">
     <label>Team B</label>
     <input id="teamBName" type="text" value="Team B" />
     <input id="teamBColor" type="color" value="#888888" title="Team B separator colour" />
-    <label>Captain</label>
-    <input id="teamBCap" type="text" placeholder="C username" />
-    <label>Vice</label>
-    <input id="teamBVice" type="text" placeholder="V username" />
   </div>
 
   <div class="spacer"></div>
 
+  <button id="rosterBtn">Roster</button>
   <button id="undoBtn" disabled>Undo</button>
   <button id="redoBtn" disabled>Redo</button>
   <button id="resetBtn">Reset</button>
   <button id="exportBtn">Export CSV</button>
-</div>
-
-<div class="bulkPanel">
-  <div class="box">
-    <label style="font-size:12px;opacity:.9;">Bulk paste roster (Team A then Team B, one username per line)</label>
-    <textarea id="bulkRoster" placeholder="Example:
-gum_umbxll
-lani
-...
-(12 lines for Team A)
-...
-(12 lines for Team B)"></textarea>
-    <div class="hint">
-      Tip: paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Extra lines are ignored.
-    </div>
-  </div>
-
-  <div class="actions">
-    <button id="applyRosterBtn">Apply roster</button>
-    <button id="clearRosterBtn">Clear box</button>
-  </div>
 </div>
 
 <div class="tableWrap">
@@ -288,9 +298,39 @@ lani
         <th class="stat">Misc. Errors</th>
       </tr>
     </thead>
-
     <tbody id="tbody"></tbody>
   </table>
+</div>
+
+<!-- Roster modal -->
+<div id="modalOverlay" class="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle">Paste roster</div>
+        <div class="modalSub">Team A then Team B, one username per line.</div>
+      </div>
+      <button id="closeRosterTop">Close</button>
+    </div>
+
+    <div class="modalBody">
+      <textarea id="bulkRoster" placeholder="Example:
+gum_umbxll
+lani
+...
+(12 lines for Team A)
+...
+(12 lines for Team B)"></textarea>
+      <div class="modalHint">
+        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Extra lines are ignored.
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button id="closeRosterBottom">Close</button>
+      <button id="applyRosterBtn" class="btnPrimary">Apply roster</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -307,9 +347,7 @@ const STATS = [
 const ROWS_PER_TEAM = 12;
 const TOTAL_ROWS = ROWS_PER_TEAM * 2;
 
-// Default role labels like your sheet
-const ROLE_LABELS_A = ["C","V","3","4","5","6","7","8","9","10","11","12"];
-const ROLE_LABELS_B = ["C","V","3","4","5","6","7","8","9","10","11","12"];
+const ROLE_LABELS = ["C","V","3","4","5","6","7","8","9","10","11","12"];
 
 /* ---------- state ---------- */
 const state = {
@@ -319,15 +357,9 @@ const state = {
   teamAName: "Team A",
   teamBName: "Team B",
   teamAColor: "#2aa2ff",
-  teamBColor: "#888888",
-
-  teamACap: "",
-  teamAVice: "",
-  teamBCap: "",
-  teamBVice: ""
+  teamBColor: "#888888"
 };
 
-// history for undo/redo
 const undoStack = [];
 const redoStack = [];
 
@@ -337,39 +369,30 @@ function pushAction(action){
   redoStack.length = 0;
   updateUndoRedoButtons();
 }
-
 function updateUndoRedoButtons(){
   document.getElementById("undoBtn").disabled = undoStack.length === 0;
   document.getElementById("redoBtn").disabled = redoStack.length === 0;
 }
-
 function applyAction(action, direction){
   const {r,c,delta} = action;
   state.values[r][c] = Math.max(0, state.values[r][c] + (delta * direction));
   const cell = document.getElementById(cellId(r,c));
   if(cell) cell.textContent = state.values[r][c] ? String(state.values[r][c]) : "";
 }
-
 function cellId(r,c){ return `cell_${r}_${c}`; }
 function nameId(r){ return `name_${r}`; }
 
 function saveToLocal(){
-  try{
-    localStorage.setItem("v42_state", JSON.stringify(state));
-  }catch(e){}
+  try{ localStorage.setItem("v42_state", JSON.stringify(state)); }catch(e){}
 }
-
 function loadFromLocal(){
   try{
     const raw = localStorage.getItem("v42_state");
     if(!raw) return;
     const parsed = JSON.parse(raw);
-    if(parsed && parsed.names && parsed.values){
-      Object.assign(state, parsed);
-    }
+    if(parsed && parsed.names && parsed.values) Object.assign(state, parsed);
   }catch(e){}
 }
-
 function normalizeLines(text){
   return text
     .replace(/\r\n/g, "\n")
@@ -379,53 +402,30 @@ function normalizeLines(text){
     .filter(s=>s.length>0);
 }
 
-/* Applies captain/vice labels to the first two rows if the names match anywhere,
-   but we also keep the role column fixed as C/V/3..12 for each team (like your sheet). */
-function autoPlaceCaptains(){
-  // If you want later: move captain/vice to the matching username row automatically.
-  // For now, the role column is fixed like your sheet, and these are informational fields for export.
-}
-
 /* ---------- render ---------- */
 function render(){
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
 
-  // Team A separator row
   tbody.appendChild(makeSepRow(state.teamAName, state.teamAColor));
+  for(let r=0; r<ROWS_PER_TEAM; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
 
-  for(let r=0; r<ROWS_PER_TEAM; r++){
-    tbody.appendChild(makePlayerRow(r, ROLE_LABELS_A[r]));
-  }
-
-  // Team B separator row
   tbody.appendChild(makeSepRow(state.teamBName, state.teamBColor));
+  for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
 
-  for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++){
-    tbody.appendChild(makePlayerRow(r, ROLE_LABELS_B[r-ROWS_PER_TEAM]));
-  }
-
-  // top inputs
   document.getElementById("teamAName").value = state.teamAName;
   document.getElementById("teamBName").value = state.teamBName;
   document.getElementById("teamAColor").value = state.teamAColor;
   document.getElementById("teamBColor").value = state.teamBColor;
-
-  document.getElementById("teamACap").value = state.teamACap || "";
-  document.getElementById("teamAVice").value = state.teamAVice || "";
-  document.getElementById("teamBCap").value = state.teamBCap || "";
-  document.getElementById("teamBVice").value = state.teamBVice || "";
 }
 
 function makeSepRow(label, hex){
   const tr = document.createElement("tr");
   tr.className = "sep";
-
   const td = document.createElement("td");
   td.colSpan = 21; // role + player + 19 stats
   td.style.background = hex;
   td.textContent = label;
-
   tr.appendChild(td);
   return tr;
 }
@@ -433,13 +433,11 @@ function makeSepRow(label, hex){
 function makePlayerRow(r, roleLabel){
   const tr = document.createElement("tr");
 
-  // role cell
   const tdRole = document.createElement("td");
   tdRole.className = "role";
   tdRole.textContent = roleLabel;
   tr.appendChild(tdRole);
 
-  // player name cell (editable)
   const tdName = document.createElement("td");
   tdName.className = "player";
   tdName.contentEditable = "true";
@@ -451,24 +449,20 @@ function makePlayerRow(r, roleLabel){
   });
   tr.appendChild(tdName);
 
-  // stat cells
   for(let c=0; c<STATS.length; c++){
     const td = document.createElement("td");
     td.className = "stat";
     td.id = cellId(r,c);
     const v = state.values[r][c];
     td.textContent = v ? String(v) : "";
-
     td.addEventListener("click", ()=>{
       state.values[r][c] = (state.values[r][c] || 0) + 1;
       td.textContent = String(state.values[r][c]);
       pushAction({r,c,delta:1});
       saveToLocal();
     });
-
     tr.appendChild(td);
   }
-
   return tr;
 }
 
@@ -493,9 +487,7 @@ document.getElementById("redoBtn").addEventListener("click", ()=>{
 
 document.getElementById("resetBtn").addEventListener("click", ()=>{
   for(let r=0;r<TOTAL_ROWS;r++){
-    for(let c=0;c<STATS.length;c++){
-      state.values[r][c]=0;
-    }
+    for(let c=0;c<STATS.length;c++) state.values[r][c]=0;
   }
   undoStack.length = 0;
   redoStack.length = 0;
@@ -508,14 +500,14 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
   const header = ["Role","Player", ...STATS];
   const rows = [header];
 
-  rows.push([`== ${state.teamAName} ==`, `Captain: ${state.teamACap || ""} | Vice: ${state.teamAVice || ""}`, ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamAName} ==`,"", ...Array(STATS.length).fill("")]);
   for(let r=0;r<ROWS_PER_TEAM;r++){
-    rows.push([ROLE_LABELS_A[r], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+    rows.push([ROLE_LABELS[r], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
   }
 
-  rows.push([`== ${state.teamBName} ==`, `Captain: ${state.teamBCap || ""} | Vice: ${state.teamBVice || ""}`, ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamBName} ==`,"", ...Array(STATS.length).fill("")]);
   for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
-    rows.push([ROLE_LABELS_B[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
   }
 
   const csv = rows.map(row =>
@@ -551,34 +543,41 @@ document.getElementById("teamBColor").addEventListener("input", (e)=>{
   render(); saveToLocal();
 });
 
-document.getElementById("teamACap").addEventListener("input", (e)=>{
-  state.teamACap = e.target.value.trim();
-  saveToLocal();
-});
-document.getElementById("teamAVice").addEventListener("input", (e)=>{
-  state.teamAVice = e.target.value.trim();
-  saveToLocal();
-});
-document.getElementById("teamBCap").addEventListener("input", (e)=>{
-  state.teamBCap = e.target.value.trim();
-  saveToLocal();
-});
-document.getElementById("teamBVice").addEventListener("input", (e)=>{
-  state.teamBVice = e.target.value.trim();
-  saveToLocal();
+/* ---------- roster modal ---------- */
+const overlay = document.getElementById("modalOverlay");
+const rosterBtn = document.getElementById("rosterBtn");
+const closeTop = document.getElementById("closeRosterTop");
+const closeBottom = document.getElementById("closeRosterBottom");
+const applyRosterBtn = document.getElementById("applyRosterBtn");
+const bulkRoster = document.getElementById("bulkRoster");
+
+function openRoster(){
+  overlay.style.display = "flex";
+  // focus textbox for immediate paste
+  setTimeout(()=> bulkRoster.focus(), 50);
+}
+function closeRoster(){
+  overlay.style.display = "none";
+}
+
+rosterBtn.addEventListener("click", openRoster);
+closeTop.addEventListener("click", closeRoster);
+closeBottom.addEventListener("click", closeRoster);
+
+// close when tapping outside modal
+overlay.addEventListener("click", (e)=>{
+  if(e.target === overlay) closeRoster();
 });
 
-/* Bulk roster */
-document.getElementById("applyRosterBtn").addEventListener("click", ()=>{
-  const lines = normalizeLines(document.getElementById("bulkRoster").value);
-  if(lines.length === 0) return;
+// Apply roster
+applyRosterBtn.addEventListener("click", ()=>{
+  const lines = normalizeLines(bulkRoster.value);
+  if(lines.length === 0) { closeRoster(); return; }
 
-  // fill Team A first
   for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length);i++){
     state.names[i] = lines[i];
   }
 
-  // if 24 lines, fill Team B too
   if(lines.length > ROWS_PER_TEAM){
     for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length-ROWS_PER_TEAM);i++){
       state.names[ROWS_PER_TEAM + i] = lines[ROWS_PER_TEAM + i];
@@ -587,17 +586,18 @@ document.getElementById("applyRosterBtn").addEventListener("click", ()=>{
 
   render();
   saveToLocal();
+  closeRoster();
 });
 
-document.getElementById("clearRosterBtn").addEventListener("click", ()=>{
-  document.getElementById("bulkRoster").value = "";
+/* keyboard: Esc closes */
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && overlay.style.display === "flex") closeRoster();
 });
 
 /* ---------- init ---------- */
 loadFromLocal();
 render();
 updateUndoRedoButtons();
-autoPlaceCaptains();
 </script>
 
 </body>
