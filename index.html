@@ -12,11 +12,18 @@
     --head:#101010;
     --text:#fff;
 
+    --topbarH: 52px;
+
     --headerH: 34px;
     --rowH: 26px;
 
     --roleW: 40px;
-    --playerW: clamp(132px, 14vw, 156px);
+
+    /* tightened a tiny bit to buy width back */
+    --playerW: clamp(124px, 13vw, 148px);
+
+    /* misc column reserved width (slightly safer than 56) */
+    --miscW: 60px;
 
     --fontH: 10px;
     --fontB: 12px;
@@ -27,6 +34,8 @@
     --gridBold: #666;
     --gridBoldW: 2px;
   }
+
+  *{ box-sizing:border-box; }
 
   html, body{
     height:100%;
@@ -39,18 +48,19 @@
 
   /* Top controls bar */
   .topbar{
+    height: var(--topbarH);
     display:flex;
     gap:10px;
     align-items:center;
     padding:10px 10px 8px;
     border-bottom:1px solid #1b1b1b;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
   }
   .topbar .group{
     display:flex;
     gap:8px;
     align-items:center;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
   }
   .topbar label{
     font-size:12px;
@@ -91,17 +101,20 @@
 
   .spacer{ flex:1; }
 
-  /* Table container */
+  /* Table container
+     IMPORTANT: Safe-area is handled as padding, so table can be width:100% reliably. */
   .tableWrap{
-    height: calc(100vh - 52px); /* only topbar */
-    width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 6px);
+    height: calc(100vh - var(--topbarH));
+    width: 100vw;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
     overflow:hidden;
   }
 
   table{
     border-collapse:collapse;
     table-layout:fixed;
-    width:100vw;
+    width:100%;   /* <- key fix (no more 100vw mismatch) */
     height:100%;
   }
 
@@ -142,14 +155,12 @@
   }
 
   /* --- STAT COLUMN SIZING ---
-     We reserve 56px for Misc. Errors to prevent rounding/clipping.
-     Then distribute remaining width across the other 18 stat columns.
-  */
+     Now computed off table's *actual* width (100% inside safe-area padding). */
   th.stat, td.stat{
-    width: calc((100vw - var(--roleW) - var(--playerW) - 56px) / 18);
+    width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 18);
   }
   th.stat.misc, td.stat.misc{
-    width:56px;
+    width: var(--miscW);
   }
 
   tbody td{
@@ -641,7 +652,3 @@ updateUndoRedoButtons();
 
 </body>
 </html>
-
-
-
-
