@@ -94,14 +94,14 @@
   /* Table container */
   .tableWrap{
     height: calc(100vh - 52px); /* only topbar */
-    width: 100vw;
+    width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 6px);
     overflow:hidden;
   }
 
   table{
     border-collapse:collapse;
     table-layout:fixed;
-    width:100vw;
+    width:100%;
     height:100%;
   }
 
@@ -641,5 +641,6 @@ updateUndoRedoButtons();
 
 </body>
 </html>
+
 
 
