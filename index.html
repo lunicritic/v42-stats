@@ -16,12 +16,16 @@
     --rowH: 26px;
 
     --roleW: 40px;
-    --playerW: 160px;
+    --playerW: 156px; /* slightly slimmer to help fit Misc. Errors */
 
     --fontH: 10px;
     --fontB: 12px;
 
-    --accent: #2aa2ff; /* used for highlighted Apply button */
+    --accent: #2aa2ff;
+
+    /* bold gridlines */
+    --gridBold: #666;
+    --gridBoldW: 2px;
   }
 
   html, body{
@@ -132,10 +136,20 @@
     overflow:hidden;
     text-overflow:ellipsis;
     font-size:var(--fontB);
+
+    /* bold divider after Player column */
+    border-right: var(--gridBoldW) solid var(--gridBold) !important;
   }
 
+  /* --- STAT COLUMN SIZING ---
+     We reserve 56px for Misc. Errors to prevent rounding/clipping.
+     Then distribute remaining width across the other 18 stat columns.
+  */
   th.stat, td.stat{
-    width: calc((100vw - var(--roleW) - var(--playerW)) / 19);
+    width: calc((100vw - var(--roleW) - var(--playerW) - 56px) / 18);
+  }
+  th.stat.misc, td.stat.misc{
+    width:56px;
   }
 
   tbody td{
@@ -166,6 +180,18 @@
     -webkit-user-select:text;
     user-select:text;
   }
+
+  /* --- BOLD SECTION GRIDLINES ---
+     Columns in full table:
+     0 role, 1 player, 2..20 stats
+  */
+  thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Apes start */
+  thead th[data-col="5"],  tbody td[data-col="5"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Spikes start */
+  thead th[data-col="8"],  tbody td[data-col="8"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Blocks start */
+  thead th[data-col="12"], tbody td[data-col="12"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Assists start */
+  thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Recs start */
+  thead th[data-col="18"], tbody td[data-col="18"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Serve start */
+  thead th[data-col="20"], tbody td[data-col="20"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Errors emphasis */
 
   /* -------- ROSTER MODAL -------- */
   .modalOverlay{
@@ -275,27 +301,34 @@
   <table id="grid">
     <thead>
       <tr>
-        <th class="role"> </th>
-        <th class="player">Player</th>
-        <th class="stat">Ape Kills</th>
-        <th class="stat">Ape Attempts</th>
-        <th class="stat">Ape Errors</th>
-        <th class="stat">Spike Kills</th>
-        <th class="stat">Spike Attempts</th>
-        <th class="stat">Spike Errors</th>
-        <th class="stat">Kill Blocks</th>
-        <th class="stat">Stuff Blocks</th>
-        <th class="stat">Soft Blocks</th>
-        <th class="stat">Block Errors</th>
-        <th class="stat">Assists</th>
-        <th class="stat">Set Errors</th>
-        <th class="stat">Spike Recs</th>
-        <th class="stat">Rec Attempts</th>
-        <th class="stat">BFs</th>
-        <th class="stat">Receive Errors</th>
-        <th class="stat">Service Aces</th>
-        <th class="stat">Serve Errors</th>
-        <th class="stat">Misc. Errors</th>
+        <th class="role" data-col="0"> </th>
+        <th class="player" data-col="1">Player</th>
+
+        <th class="stat" data-col="2">Ape Kills</th>
+        <th class="stat" data-col="3">Ape Attempts</th>
+        <th class="stat" data-col="4">Ape Errors</th>
+
+        <th class="stat" data-col="5">Spike Kills</th>
+        <th class="stat" data-col="6">Spike Attempts</th>
+        <th class="stat" data-col="7">Spike Errors</th>
+
+        <th class="stat" data-col="8">Kill Blocks</th>
+        <th class="stat" data-col="9">Stuff Blocks</th>
+        <th class="stat" data-col="10">Soft Blocks</th>
+        <th class="stat" data-col="11">Block Errors</th>
+
+        <th class="stat" data-col="12">Assists</th>
+        <th class="stat" data-col="13">Set Errors</th>
+
+        <th class="stat" data-col="14">Spike Recs</th>
+        <th class="stat" data-col="15">Rec Attempts</th>
+        <th class="stat" data-col="16">BFs</th>
+        <th class="stat" data-col="17">Receive Errors</th>
+
+        <th class="stat" data-col="18">Service Aces</th>
+        <th class="stat" data-col="19">Serve Errors</th>
+
+        <th class="stat misc" data-col="20">Misc. Errors</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -436,12 +469,14 @@ function makePlayerRow(r, roleLabel){
   const tdRole = document.createElement("td");
   tdRole.className = "role";
   tdRole.textContent = roleLabel;
+  tdRole.dataset.col = "0";
   tr.appendChild(tdRole);
 
   const tdName = document.createElement("td");
   tdName.className = "player";
   tdName.contentEditable = "true";
   tdName.id = nameId(r);
+  tdName.dataset.col = "1";
   tdName.textContent = state.names[r] || "";
   tdName.addEventListener("input", ()=>{
     state.names[r] = tdName.textContent.trim();
@@ -451,16 +486,24 @@ function makePlayerRow(r, roleLabel){
 
   for(let c=0; c<STATS.length; c++){
     const td = document.createElement("td");
-    td.className = "stat";
+
+    // Full table column index (0 role, 1 player, stats start at 2)
+    const colIndex = 2 + c;
+
+    td.className = "stat" + (c === STATS.length - 1 ? " misc" : "");
+    td.dataset.col = String(colIndex);
     td.id = cellId(r,c);
+
     const v = state.values[r][c];
     td.textContent = v ? String(v) : "";
+
     td.addEventListener("click", ()=>{
       state.values[r][c] = (state.values[r][c] || 0) + 1;
       td.textContent = String(state.values[r][c]);
       pushAction({r,c,delta:1});
       saveToLocal();
     });
+
     tr.appendChild(td);
   }
   return tr;
@@ -553,7 +596,6 @@ const bulkRoster = document.getElementById("bulkRoster");
 
 function openRoster(){
   overlay.style.display = "flex";
-  // focus textbox for immediate paste
   setTimeout(()=> bulkRoster.focus(), 50);
 }
 function closeRoster(){
@@ -564,12 +606,10 @@ rosterBtn.addEventListener("click", openRoster);
 closeTop.addEventListener("click", closeRoster);
 closeBottom.addEventListener("click", closeRoster);
 
-// close when tapping outside modal
 overlay.addEventListener("click", (e)=>{
   if(e.target === overlay) closeRoster();
 });
 
-// Apply roster
 applyRosterBtn.addEventListener("click", ()=>{
   const lines = normalizeLines(bulkRoster.value);
   if(lines.length === 0) { closeRoster(); return; }
@@ -589,7 +629,6 @@ applyRosterBtn.addEventListener("click", ()=>{
   closeRoster();
 });
 
-/* keyboard: Esc closes */
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && overlay.style.display === "flex") closeRoster();
 });
