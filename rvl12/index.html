@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>RVL 12 Stat Grid</title>
+
+<style>
+  :root{
+    --bg:#000;
+    --grid:#2b2b2b;
+    --head:#101010;
+    --text:#fff;
+
+    --topbarH: 52px;
+
+    --headerH: 34px;
+    --rowH: 26px;
+
+    --roleW: 40px;
+
+    /* tightened a tiny bit to buy width back */
+    --playerW: clamp(124px, 13vw, 148px);
+
+    /* misc column reserved width (slightly safer than 56) */
+    --miscW: 60px;
+
+    --fontH: 10px;
+    --fontB: 12px;
+
+    --accent: #2aa2ff;
+
+    /* bold gridlines */
+    --gridBold: #666;
+    --gridBoldW: 2px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html, body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system, system-ui, Arial, sans-serif;
+    overflow:hidden; /* no page scroll */
+  }
+
+  /* Top controls bar */
+  .topbar{
+    height: var(--topbarH);
+    display:flex;
+    gap:10px;
+    align-items:center;
+    padding:10px 10px 8px;
+    border-bottom:1px solid #1b1b1b;
+    flex-wrap:nowrap;
+  }
+  .topbar .group{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:nowrap;
+  }
+  .topbar label{
+    font-size:12px;
+    opacity:.9;
+    white-space:nowrap;
+  }
+  input[type="text"]{
+    height:28px;
+    border-radius:8px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    color:#fff;
+    padding:0 10px;
+    font-size:13px;
+    outline:none;
+  }
+  input[type="color"]{
+    height:28px;
+    width:40px;
+    border-radius:8px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    padding:0;
+  }
+
+  button{
+    height:30px;
+    border-radius:10px;
+    border:1px solid #2a2a2a;
+    background:#121212;
+    color:#fff;
+    font-size:13px;
+    padding:0 12px;
+    white-space:nowrap;
+  }
+  button:active{ transform:translateY(1px); }
+  button:disabled{ opacity:.45; }
+
+  .spacer{ flex:1; }
+
+  /* Table container
+     IMPORTANT: Safe-area is handled as padding, so table can be width:100% reliably. */
+  .tableWrap{
+    height: calc(100vh - var(--topbarH));
+    width: 100vw;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    overflow:hidden;
+  }
+
+  table{
+    border-collapse:collapse;
+    table-layout:fixed;
+    width:100%;   /* <- key fix (no more 100vw mismatch) */
+    height:100%;
+  }
+
+  th, td{
+    border:1px solid var(--grid);
+    text-align:center;
+    padding:0;
+    line-height:1;
+    user-select:none;
+  }
+
+  thead th{
+    background:var(--head);
+    font-weight:700;
+    font-size:var(--fontH);
+    height:var(--headerH);
+  }
+
+  th.role, td.role{
+    width:var(--roleW);
+    background:#050505;
+    font-size:var(--fontB);
+    font-weight:700;
+  }
+
+  th.player, td.player{
+    width:var(--playerW);
+    text-align:left;
+    padding-left:8px;
+    background:#050505;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:var(--fontB);
+
+    /* bold divider after Player column */
+    border-right: var(--gridBoldW) solid var(--gridBold) !important;
+  }
+
+  /* --- STAT COLUMN SIZING ---
+     Now computed off table's *actual* width (100% inside safe-area padding). */
+  th.stat, td.stat{
+    width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 14);
+  }
+  th.stat.misc, td.stat.misc{
+    width: var(--miscW);
+  }
+
+  tbody td{
+    height:var(--rowH);
+    font-size:var(--fontB);
+  }
+
+  td.stat{ cursor:pointer; }
+
+  td.stat:active{
+    background:#0f0;
+    color:#000;
+  }
+
+  tr.sep td{
+    height: 18px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    color:#000;
+    text-align:left;
+    padding-left:10px;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+  }
+
+  [contenteditable]{
+    -webkit-user-select:text;
+    user-select:text;
+  }
+
+  
+  /* --- BOLD SECTION GRIDLINES ---
+     Columns in full table:
+     0 role, 1 player, 2..16 stats
+  */
+  thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 1 start */
+  thead th[data-col="7"],  tbody td[data-col="7"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 2 start */
+  thead th[data-col="10"], tbody td[data-col="10"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 3 start */
+  thead th[data-col="11"], tbody td[data-col="11"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 4 start */
+  thead th[data-col="13"], tbody td[data-col="13"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 5 start */
+  thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Group 6 start */
+
+
+  /* -------- ROSTER MODAL -------- */
+  .modalOverlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+  }
+  .modal{
+    width:min(980px, 94vw);
+    height:min(620px, 88vh);
+    background:#0a0a0a;
+    border:1px solid #2a2a2a;
+    border-radius:16px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 20px 70px rgba(0,0,0,.65);
+  }
+  .modalHeader{
+    padding:14px 16px;
+    border-bottom:1px solid #1f1f1f;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .modalTitle{
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .modalSub{
+    font-size:11px;
+    opacity:.75;
+    margin-top:2px;
+  }
+  .modalBody{
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    flex:1;
+  }
+  .modalBody textarea{
+    flex:1;
+    width:100%;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    color:#fff;
+    padding:12px;
+    font-size:13px;
+    line-height:1.25;
+    outline:none;
+    resize:none;
+    white-space:pre-wrap;
+  }
+  .modalHint{
+    font-size:11px;
+    opacity:.75;
+  }
+  .modalFooter{
+    padding:12px 16px;
+    border-top:1px solid #1f1f1f;
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+  }
+  .btnPrimary{
+    background:var(--accent);
+    border-color:transparent;
+    color:#000;
+    font-weight:800;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div class="group">
+    <label>Team A</label>
+    <input id="teamAName" type="text" value="Team A" />
+    <input id="teamAColor" type="color" value="#2aa2ff" title="Team A separator colour" />
+  </div>
+
+  <div class="group">
+    <label>Team B</label>
+    <input id="teamBName" type="text" value="Team B" />
+    <input id="teamBColor" type="color" value="#888888" title="Team B separator colour" />
+  </div>
+
+  <div class="spacer"></div>
+
+  <button id="rosterBtn">Roster</button>
+  <button id="undoBtn" disabled>Undo</button>
+  <button id="redoBtn" disabled>Redo</button>
+  <button id="resetBtn">Reset</button>
+  <button id="exportBtn">Export CSV</button>
+</div>
+
+<div class="tableWrap">
+  <table id="grid">
+    <thead>
+      <tr>
+        <th class="role" data-col="0"> </th>
+        <th class="player" data-col="1">Player</th>
+
+        <th class="stat" data-col="2">Spiking Errors</th>
+        <th class="stat" data-col="3">Ape Kills</th>
+        <th class="stat" data-col="4">Ape Attempts</th>
+        <th class="stat" data-col="5">Kills</th>
+        <th class="stat" data-col="6">Attempts</th>
+
+        <th class="stat" data-col="7">Kill</th>
+        <th class="stat" data-col="8">Soft</th>
+        <th class="stat" data-col="9">One Touch</th>
+
+        <th class="stat" data-col="10">Assists</th>
+
+        <th class="stat" data-col="11">Spike</th>
+        <th class="stat" data-col="12">BFs</th>
+
+        <th class="stat" data-col="13">Aces</th>
+
+        <th class="stat" data-col="14">Misc. Errors</th>
+        <th class="stat" data-col="15">Set. Errors</th>
+
+        <th class="stat misc" data-col="16">Serve Errors</th>
+
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- Roster modal -->
+<div id="modalOverlay" class="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle">Paste roster</div>
+        <div class="modalSub">Team A then Team B, one username per line.</div>
+      </div>
+      <button id="closeRosterTop">Close</button>
+    </div>
+
+    <div class="modalBody">
+      <textarea id="bulkRoster" placeholder="Example:
+gum_umbxll
+lani
+...
+(12 lines for Team A)
+...
+(12 lines for Team B)"></textarea>
+      <div class="modalHint">
+        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Extra lines are ignored.
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button id="closeRosterBottom">Close</button>
+      <button id="applyRosterBtn" class="btnPrimary">Apply roster</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- config ---------- */
+const STATS = [
+  "Spiking Errors","Ape Kills","Ape Attempts","Kills","Attempts",
+  "Kill","Soft","One Touch",
+  "Assists",
+  "Spike","BFs",
+  "Aces",
+  "Misc. Errors","Set. Errors","Serve Errors"
+];
+
+const ROWS_PER_TEAM = 12;
+const TOTAL_ROWS = ROWS_PER_TEAM * 2;
+
+const ROLE_LABELS = ["C","V","3","4","5","6","7","8","9","10","11","12"];
+
+/* ---------- state ---------- */
+const state = {
+  names: Array.from({length: TOTAL_ROWS}, (_,i)=> i<ROWS_PER_TEAM ? `Player ${i+1}` : `Opponent ${i-ROWS_PER_TEAM+1}`),
+  values: Array.from({length: TOTAL_ROWS}, ()=> Array.from({length: STATS.length}, ()=> 0)),
+
+  teamAName: "Team A",
+  teamBName: "Team B",
+  teamAColor: "#2aa2ff",
+  teamBColor: "#888888"
+};
+
+const undoStack = [];
+const redoStack = [];
+
+/* ---------- helpers ---------- */
+function pushAction(action){
+  undoStack.push(action);
+  redoStack.length = 0;
+  updateUndoRedoButtons();
+}
+function updateUndoRedoButtons(){
+  document.getElementById("undoBtn").disabled = undoStack.length === 0;
+  document.getElementById("redoBtn").disabled = redoStack.length === 0;
+}
+function applyAction(action, direction){
+  const {r,c,delta} = action;
+  state.values[r][c] = Math.max(0, state.values[r][c] + (delta * direction));
+  const cell = document.getElementById(cellId(r,c));
+  if(cell) cell.textContent = state.values[r][c] ? String(state.values[r][c]) : "";
+}
+function cellId(r,c){ return `cell_${r}_${c}`; }
+function nameId(r){ return `name_${r}`; }
+
+function saveToLocal(){
+  try{ localStorage.setItem("v42_state", JSON.stringify(state)); }catch(e){}
+}
+function loadFromLocal(){
+  try{
+    const raw = localStorage.getItem("v42_state");
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.names && parsed.values) Object.assign(state, parsed);
+  }catch(e){}
+}
+function normalizeLines(text){
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map(s=>s.trim())
+    .filter(s=>s.length>0);
+}
+
+/* ---------- render ---------- */
+function render(){
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+
+  tbody.appendChild(makeSepRow(state.teamAName, state.teamAColor));
+  for(let r=0; r<ROWS_PER_TEAM; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
+
+  tbody.appendChild(makeSepRow(state.teamBName, state.teamBColor));
+  for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
+
+  document.getElementById("teamAName").value = state.teamAName;
+  document.getElementById("teamBName").value = state.teamBName;
+  document.getElementById("teamAColor").value = state.teamAColor;
+  document.getElementById("teamBColor").value = state.teamBColor;
+}
+
+function makeSepRow(label, hex){
+  const tr = document.createElement("tr");
+  tr.className = "sep";
+  const td = document.createElement("td");
+  td.colSpan = 17; // role + player + 15 stats
+  td.style.background = hex;
+  td.textContent = label;
+  tr.appendChild(td);
+  return tr;
+}
+
+function makePlayerRow(r, roleLabel){
+  const tr = document.createElement("tr");
+
+  const tdRole = document.createElement("td");
+  tdRole.className = "role";
+  tdRole.textContent = roleLabel;
+  tdRole.dataset.col = "0";
+  tr.appendChild(tdRole);
+
+  const tdName = document.createElement("td");
+  tdName.className = "player";
+  tdName.contentEditable = "true";
+  tdName.id = nameId(r);
+  tdName.dataset.col = "1";
+  tdName.textContent = state.names[r] || "";
+  tdName.addEventListener("input", ()=>{
+    state.names[r] = tdName.textContent.trim();
+    saveToLocal();
+  });
+  tr.appendChild(tdName);
+
+  for(let c=0; c<STATS.length; c++){
+    const td = document.createElement("td");
+
+    // Full table column index (0 role, 1 player, stats start at 2)
+    const colIndex = 2 + c;
+
+    td.className = "stat" + (c === STATS.length - 1 ? " misc" : "");
+    td.dataset.col = String(colIndex);
+    td.id = cellId(r,c);
+
+    const v = state.values[r][c];
+    td.textContent = v ? String(v) : "";
+
+    td.addEventListener("click", ()=>{
+      state.values[r][c] = (state.values[r][c] || 0) + 1;
+      td.textContent = String(state.values[r][c]);
+      pushAction({r,c,delta:1});
+      saveToLocal();
+    });
+
+    tr.appendChild(td);
+  }
+  return tr;
+}
+
+/* ---------- controls ---------- */
+document.getElementById("undoBtn").addEventListener("click", ()=>{
+  const action = undoStack.pop();
+  if(!action) return;
+  applyAction(action, -1);
+  redoStack.push(action);
+  updateUndoRedoButtons();
+  saveToLocal();
+});
+
+document.getElementById("redoBtn").addEventListener("click", ()=>{
+  const action = redoStack.pop();
+  if(!action) return;
+  applyAction(action, +1);
+  undoStack.push(action);
+  updateUndoRedoButtons();
+  saveToLocal();
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  for(let r=0;r<TOTAL_ROWS;r++){
+    for(let c=0;c<STATS.length;c++) state.values[r][c]=0;
+  }
+  undoStack.length = 0;
+  redoStack.length = 0;
+  updateUndoRedoButtons();
+  render();
+  saveToLocal();
+});
+
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  const header = ["Role","Player", ...STATS];
+  const rows = [header];
+
+  rows.push([`== ${state.teamAName} ==`,"", ...Array(STATS.length).fill("")]);
+  for(let r=0;r<ROWS_PER_TEAM;r++){
+    rows.push([ROLE_LABELS[r], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+  }
+
+  rows.push([`== ${state.teamBName} ==`,"", ...Array(STATS.length).fill("")]);
+  for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
+    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+  }
+
+  const csv = rows.map(row =>
+    row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(",")
+  ).join("\n");
+
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `v42_stats_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+/* Team settings */
+document.getElementById("teamAName").addEventListener("input", (e)=>{
+  state.teamAName = e.target.value;
+  render(); saveToLocal();
+});
+document.getElementById("teamBName").addEventListener("input", (e)=>{
+  state.teamBName = e.target.value;
+  render(); saveToLocal();
+});
+document.getElementById("teamAColor").addEventListener("input", (e)=>{
+  state.teamAColor = e.target.value;
+  render(); saveToLocal();
+});
+document.getElementById("teamBColor").addEventListener("input", (e)=>{
+  state.teamBColor = e.target.value;
+  render(); saveToLocal();
+});
+
+/* ---------- roster modal ---------- */
+const overlay = document.getElementById("modalOverlay");
+const rosterBtn = document.getElementById("rosterBtn");
+const closeTop = document.getElementById("closeRosterTop");
+const closeBottom = document.getElementById("closeRosterBottom");
+const applyRosterBtn = document.getElementById("applyRosterBtn");
+const bulkRoster = document.getElementById("bulkRoster");
+
+function openRoster(){
+  overlay.style.display = "flex";
+  setTimeout(()=> bulkRoster.focus(), 50);
+}
+function closeRoster(){
+  overlay.style.display = "none";
+}
+
+rosterBtn.addEventListener("click", openRoster);
+closeTop.addEventListener("click", closeRoster);
+closeBottom.addEventListener("click", closeRoster);
+
+overlay.addEventListener("click", (e)=>{
+  if(e.target === overlay) closeRoster();
+});
+
+applyRosterBtn.addEventListener("click", ()=>{
+  const lines = normalizeLines(bulkRoster.value);
+  if(lines.length === 0) { closeRoster(); return; }
+
+  for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length);i++){
+    state.names[i] = lines[i];
+  }
+
+  if(lines.length > ROWS_PER_TEAM){
+    for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length-ROWS_PER_TEAM);i++){
+      state.names[ROWS_PER_TEAM + i] = lines[ROWS_PER_TEAM + i];
+    }
+  }
+
+  render();
+  saveToLocal();
+  closeRoster();
+});
+
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && overlay.style.display === "flex") closeRoster();
+});
+
+/* ---------- init ---------- */
+loadFromLocal();
+render();
+updateUndoRedoButtons();
+</script>
+
+</body>
+</html>
