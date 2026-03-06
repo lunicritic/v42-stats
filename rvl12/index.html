@@ -781,7 +781,8 @@ function makePlayerRow(r, roleLabel){
     const v = state.values[r][c];
     td.textContent = v ? String(v) : "";
 
-    let tapHandled = false;
+    let touchTapInProgress = false;
+    let touchClickBlockUntil = 0;
 
     const activateCell = (e)=>{
       if(e){
@@ -813,14 +814,30 @@ function makePlayerRow(r, roleLabel){
 
     td.addEventListener("pointerdown", (e)=>{
       if(e.pointerType === "touch" || e.pointerType === "pen"){
-        tapHandled = true;
+        touchTapInProgress = true;
+        pulseCell(td);
+      }
+    });
+
+    td.addEventListener("pointercancel", ()=>{
+      touchTapInProgress = false;
+    });
+
+    td.addEventListener("pointerleave", ()=>{
+      touchTapInProgress = false;
+    });
+
+    td.addEventListener("pointerup", (e)=>{
+      if(e.pointerType === "touch" || e.pointerType === "pen"){
+        if(!touchTapInProgress) return;
+        touchTapInProgress = false;
+        touchClickBlockUntil = Date.now() + 800;
         activateCell(e);
-        setTimeout(() => { tapHandled = false; }, 350);
       }
     });
 
     td.addEventListener("click", (e)=>{
-      if(tapHandled) return;
+      if(Date.now() < touchClickBlockUntil) return;
       activateCell(e);
     });
 
