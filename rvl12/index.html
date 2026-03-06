@@ -36,6 +36,7 @@
     --danger:#d83a3a;
 
     --scoreFlash:#00ff66;
+    --rosterApply:#1f9d4c;
 
     --rowDark:#111;
     --rowBlack:#000;
@@ -51,6 +52,10 @@
     font-family:-apple-system, system-ui, Arial, sans-serif;
     overflow:hidden;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  html{
+    -webkit-text-size-adjust:100%;
   }
 
   .topbar{
@@ -104,6 +109,11 @@
     min-width:0;
   }
 
+  input[type="text"]::placeholder,
+  textarea::placeholder{
+    color:#7a7a7a;
+  }
+
   #teamAName, #teamBName{
     width:150px;
   }
@@ -133,6 +143,13 @@
 
   .btnDanger{
     background:var(--danger);
+    border-color:transparent;
+    color:#fff;
+    font-weight:800;
+  }
+
+  .btnApply{
+    background:var(--rosterApply);
     border-color:transparent;
     color:#fff;
     font-weight:800;
@@ -274,21 +291,28 @@
     color:var(--lastText) !important;
   }
 
+  .flash-white{
+    background:#fff !important;
+    color:#000 !important;
+    transition: background-color .28s ease, color .28s ease;
+  }
+
   tr.sep td{
     height: 18px;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: .2px;
-    color:#000;
     text-align:left;
     padding-left:10px;
     border-top: 1px solid #000;
     border-bottom: 1px solid #000;
+    transition: background-color .28s ease, color .28s ease;
   }
 
   [contenteditable]{
     -webkit-user-select:text;
     user-select:text;
+    outline:none;
   }
 
   thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
@@ -353,10 +377,11 @@
 
   .rosterGrid{
     display:grid;
-    grid-template-columns: 44px 1fr;
-    gap:10px;
+    grid-template-columns: 56px 1fr;
+    gap:12px;
     flex:1;
     min-height:0;
+    align-items:stretch;
   }
 
   .rosterGuide{
@@ -364,13 +389,12 @@
     border:1px solid #2a2a2a;
     background:#0d0d0d;
     padding:12px 0;
-    width:44px;
     font-size:13px;
     line-height:1.25;
-    display:flex;
-    flex-direction:column;
+    display:grid;
+    grid-template-rows:repeat(24, 1fr);
     align-items:center;
-    justify-content:flex-start;
+    justify-items:center;
     overflow:hidden;
     user-select:none;
   }
@@ -378,20 +402,15 @@
   .rosterGuideLine{
     width:100%;
     text-align:center;
-    display:block;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100%;
   }
 
   .rosterGuideLine.hi{
     color:#fff;
     font-weight:800;
-  }
-
-  .rosterGuideDivider{
-    width:14px;
-    height:1px;
-    background:rgba(255,255,255,.7);
-    margin:2px 0;
-    display:block;
   }
 
   .modalBody textarea{
@@ -411,7 +430,8 @@
 
   .modalHint{
     font-size:11px;
-    opacity:.75;
+    opacity:.82;
+    line-height:1.45;
   }
 
   .modalFooter{
@@ -457,13 +477,13 @@
   <div class="topLeft">
     <div class="group">
       <label>Team A</label>
-      <input id="teamAName" type="text" value="" />
+      <input id="teamAName" type="text" value="" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" />
       <input id="teamAColor" type="color" value="#c8c8c8" title="Team A separator colour" />
     </div>
 
     <div class="group">
       <label>Team B</label>
-      <input id="teamBName" type="text" value="" />
+      <input id="teamBName" type="text" value="" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" />
       <input id="teamBColor" type="color" value="#c8c8c8" title="Team B separator colour" />
     </div>
   </div>
@@ -545,7 +565,6 @@
           <span class="rosterGuideLine">10</span>
           <span class="rosterGuideLine">11</span>
           <span class="rosterGuideLine">12</span>
-          <span class="rosterGuideDivider"></span>
           <span class="rosterGuideLine hi">C</span>
           <span class="rosterGuideLine hi">V</span>
           <span class="rosterGuideLine">3</span>
@@ -560,24 +579,42 @@
           <span class="rosterGuideLine">12</span>
         </div>
 
-        <textarea id="bulkRoster" placeholder="Example:
-Gingerly
-Lurkxer
-Sedrata
-…
-(12 lines for Team A)
-…
-(12 lines for Team B)"></textarea>
+        <textarea id="bulkRoster" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" placeholder="kyaannss
+lhovay
+crxypttss
+DarkzyHatesRoblox
+dmbrandons
+iaannss
+Josephh_john
+kurddss
+RainbowSwadow21
+risinggss
+sedrata
+Tripsillygoose
+agtheboss36
+m_ochii3
+BlackGokuGit
+braybraytoshay
+ch4dzs
+DiagonalFlame
+ilKiia
+jintsukuroi
+urugulus
+viatcseawing
+robloxavatar0
+D_ingK"></textarea>
       </div>
 
       <div class="modalHint">
-        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Empty lines are preserved as empty player slots.
+        Example roster layout shown above.<br><br>
+        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B.<br>
+        <strong>Empty lines will be preserved as empty player slots.</strong>
       </div>
     </div>
 
     <div class="modalFooter">
       <button id="closeRosterBottom">Close</button>
-      <button id="applyRosterBtn" class="btnPrimary">Apply roster</button>
+      <button id="applyRosterBtn" class="btnApply">Apply roster</button>
     </div>
   </div>
 </div>
@@ -663,6 +700,7 @@ function cloneDeep(obj){
 
 function cellId(r,c){ return `cell_${r}_${c}`; }
 function nameId(r){ return `name_${r}`; }
+function sepId(team){ return team === "A" ? "sep_team_a" : "sep_team_b"; }
 
 function clearScoreFlash(){
   document.getElementById("scoreLeft").classList.remove("flash");
@@ -780,6 +818,37 @@ function applyScoreDelta(side, delta, shouldFlash = false){
   }
 }
 
+function hexToRgb(hex){
+  const v = hex.replace("#", "");
+  const n = parseInt(v.length === 3 ? v.split("").map(x=>x+x).join("") : v, 16);
+  return {
+    r: (n >> 16) & 255,
+    g: (n >> 8) & 255,
+    b: n & 255
+  };
+}
+
+function getContrastText(hex){
+  const {r,g,b} = hexToRgb(hex);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance < 0.58 ? "#fff" : "#000";
+}
+
+function flashElement(el, duration = 320){
+  if(!el) return;
+  el.classList.add("flash-white");
+  setTimeout(() => el.classList.remove("flash-white"), duration);
+}
+
+function flashElementSequence(ids, step = 34, duration = 260){
+  ids.forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if(el) flashElement(el, duration);
+    }, i * step);
+  });
+}
+
 function applyAction(action, direction){
   if(action.type === "stat"){
     applyDelta(action.r, action.c, action.delta * direction);
@@ -821,10 +890,10 @@ function render(){
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
 
-  tbody.appendChild(makeSepRow(state.teamAName, state.teamAColor));
+  tbody.appendChild(makeSepRow("A", state.teamAName, state.teamAColor));
   for(let r=0; r<ROWS_PER_TEAM; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
 
-  tbody.appendChild(makeSepRow(state.teamBName, state.teamBColor));
+  tbody.appendChild(makeSepRow("B", state.teamBName, state.teamBColor));
   for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
 
   document.getElementById("teamAName").value = state.teamAName;
@@ -836,14 +905,18 @@ function render(){
   if(state.lastTouched) setLastTouched(state.lastTouched);
 }
 
-function makeSepRow(label, hex){
+function makeSepRow(team, label, hex){
   const tr = document.createElement("tr");
   tr.className = "sep";
+
   const td = document.createElement("td");
   td.colSpan = 17;
+  td.id = sepId(team);
   td.style.background = hex;
+  td.style.color = getContrastText(hex);
   td.textContent = label || "";
   tr.appendChild(td);
+
   return tr;
 }
 
@@ -860,13 +933,29 @@ function makePlayerRow(r, roleLabel){
   const tdName = document.createElement("td");
   tdName.className = "player";
   tdName.contentEditable = "true";
+  tdName.spellcheck = false;
   tdName.id = nameId(r);
   tdName.dataset.col = "1";
   tdName.textContent = state.names[r] || "";
+
   tdName.addEventListener("input", ()=>{
     state.names[r] = tdName.textContent;
     saveToLocal();
   });
+
+  tdName.addEventListener("blur", ()=>{
+    state.names[r] = tdName.textContent;
+    saveToLocal();
+    flashElement(tdName, 340);
+  });
+
+  tdName.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      tdName.blur();
+    }
+  });
+
   tr.appendChild(tdName);
 
   for(let c=0; c<STATS.length; c++){
@@ -1067,6 +1156,15 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
   URL.revokeObjectURL(url);
 });
 
+function flashTeamControls(team){
+  const nameInput = document.getElementById(team === "A" ? "teamAName" : "teamBName");
+  const colorInput = document.getElementById(team === "A" ? "teamAColor" : "teamBColor");
+  const sep = document.getElementById(sepId(team));
+  flashElement(nameInput, 340);
+  flashElement(colorInput, 340);
+  flashElement(sep, 340);
+}
+
 document.getElementById("teamAName").addEventListener("input", (e)=>{
   state.teamAName = e.target.value;
   render();
@@ -1079,16 +1177,46 @@ document.getElementById("teamBName").addEventListener("input", (e)=>{
   saveToLocal();
 });
 
+document.getElementById("teamAName").addEventListener("blur", (e)=>{
+  state.teamAName = e.target.value;
+  render();
+  saveToLocal();
+  flashTeamControls("A");
+});
+
+document.getElementById("teamBName").addEventListener("blur", (e)=>{
+  state.teamBName = e.target.value;
+  render();
+  saveToLocal();
+  flashTeamControls("B");
+});
+
+document.getElementById("teamAName").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter"){
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+
+document.getElementById("teamBName").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter"){
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+
 document.getElementById("teamAColor").addEventListener("input", (e)=>{
   state.teamAColor = e.target.value;
   render();
   saveToLocal();
+  flashTeamControls("A");
 });
 
 document.getElementById("teamBColor").addEventListener("input", (e)=>{
   state.teamBColor = e.target.value;
   render();
   saveToLocal();
+  flashTeamControls("B");
 });
 
 const overlay = document.getElementById("modalOverlay");
@@ -1127,6 +1255,13 @@ applyRosterBtn.addEventListener("click", ()=>{
 
   render();
   saveToLocal();
+
+  const ids = [];
+  for(let i=0;i<capped.length;i++){
+    ids.push(nameId(i));
+  }
+  flashElementSequence(ids, 34, 280);
+
   closeRoster();
 });
 
