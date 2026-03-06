@@ -781,6 +781,8 @@ function makePlayerRow(r, roleLabel){
     const v = state.values[r][c];
     td.textContent = v ? String(v) : "";
 
+    let tapHandled = false;
+
     const activateCell = (e)=>{
       if(e){
         e.preventDefault();
@@ -810,13 +812,15 @@ function makePlayerRow(r, roleLabel){
     };
 
     td.addEventListener("pointerdown", (e)=>{
-      if(e.pointerType !== "mouse"){
+      if(e.pointerType === "touch" || e.pointerType === "pen"){
+        tapHandled = true;
         activateCell(e);
+        setTimeout(() => { tapHandled = false; }, 350);
       }
     });
 
     td.addEventListener("click", (e)=>{
-      if(e.detail === 0) return;
+      if(tapHandled) return;
       activateCell(e);
     });
 
