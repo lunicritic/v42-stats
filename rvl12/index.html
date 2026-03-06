@@ -36,6 +36,9 @@
     --danger:#d83a3a;
 
     --scoreFlash:#00ff66;
+
+    --rowDark:#111;
+    --rowBlack:#000;
   }
 
   *{ box-sizing:border-box; }
@@ -51,10 +54,11 @@
   }
 
   .topbar{
+    position:relative;
     height: var(--topbarH);
-    display:grid;
-    grid-template-columns: 1fr auto 1fr;
+    display:flex;
     align-items:center;
+    justify-content:space-between;
     gap:10px;
     padding:10px 10px 8px;
     border-bottom:1px solid #1b1b1b;
@@ -66,6 +70,7 @@
     gap:10px;
     align-items:center;
     min-width:0;
+    z-index:2;
   }
 
   .topRight{
@@ -134,10 +139,14 @@
   }
 
   .scoreWrap{
-    justify-self:center;
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%);
     display:flex;
     align-items:center;
     gap:8px;
+    z-index:1;
   }
 
   .scoreTop{
@@ -145,11 +154,10 @@
     font-weight:900;
     letter-spacing:.5px;
     text-align:center;
-    min-width:120px;
-    display:flex;
+    min-width:132px;
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items:center;
-    justify-content:center;
-    gap:8px;
   }
 
   .scoreNum{
@@ -161,6 +169,11 @@
 
   .scoreNum.flash{
     color:var(--scoreFlash);
+  }
+
+  .scoreDash{
+    width:18px;
+    text-align:center;
   }
 
   .scoreFlipBtn{
@@ -203,7 +216,6 @@
 
   th.role, td.role{
     width:var(--roleW);
-    background:#050505;
     font-size:var(--fontB);
     font-weight:700;
   }
@@ -212,7 +224,6 @@
     width:var(--playerW);
     text-align:left;
     padding-left:8px;
-    background:#050505;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -231,6 +242,18 @@
   tbody td{
     height:var(--rowH);
     font-size:var(--fontB);
+  }
+
+  tbody tr.player-row.alt-dark td.role,
+  tbody tr.player-row.alt-dark td.player,
+  tbody tr.player-row.alt-dark td.stat{
+    background:var(--rowDark);
+  }
+
+  tbody tr.player-row.alt-black td.role,
+  tbody tr.player-row.alt-black td.player,
+  tbody tr.player-row.alt-black td.stat{
+    background:var(--rowBlack);
   }
 
   td.stat{
@@ -328,6 +351,49 @@
     flex:1;
   }
 
+  .rosterGrid{
+    display:grid;
+    grid-template-columns: 44px 1fr;
+    gap:10px;
+    flex:1;
+    min-height:0;
+  }
+
+  .rosterGuide{
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    padding:12px 0;
+    width:44px;
+    font-size:13px;
+    line-height:1.25;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    overflow:hidden;
+    user-select:none;
+  }
+
+  .rosterGuideLine{
+    width:100%;
+    text-align:center;
+    display:block;
+  }
+
+  .rosterGuideLine.hi{
+    color:#fff;
+    font-weight:800;
+  }
+
+  .rosterGuideDivider{
+    width:14px;
+    height:1px;
+    background:rgba(255,255,255,.7);
+    margin:2px 0;
+    display:block;
+  }
+
   .modalBody textarea{
     flex:1;
     width:100%;
@@ -365,16 +431,17 @@
 
   @media (max-width: 1100px){
     .topbar{
-      grid-template-columns: 1fr;
       height:auto;
-      gap:8px;
+      min-height:var(--topbarH);
+      flex-wrap:wrap;
+      justify-content:flex-start;
+      padding-top:44px;
     }
     .scoreWrap{
-      order:2;
-      justify-self:center;
+      top:18px;
+      transform:translateX(-50%);
     }
     .topRight{
-      justify-content:flex-start;
       flex-wrap:wrap;
     }
     .tableWrap{
@@ -391,20 +458,20 @@
     <div class="group">
       <label>Team A</label>
       <input id="teamAName" type="text" value="" />
-      <input id="teamAColor" type="color" value="#808080" title="Team A separator colour" />
+      <input id="teamAColor" type="color" value="#c8c8c8" title="Team A separator colour" />
     </div>
 
     <div class="group">
       <label>Team B</label>
       <input id="teamBName" type="text" value="" />
-      <input id="teamBColor" type="color" value="#808080" title="Team B separator colour" />
+      <input id="teamBColor" type="color" value="#c8c8c8" title="Team B separator colour" />
     </div>
   </div>
 
   <div class="scoreWrap">
     <div id="scoreDisplay" class="scoreTop">
       <span id="scoreLeft" class="scoreNum">0</span>
-      <span>-</span>
+      <span class="scoreDash">-</span>
       <span id="scoreRight" class="scoreNum">0</span>
     </div>
     <button id="scoreFlipBtn" class="scoreFlipBtn" title="Flip scoreboard orientation">⇄</button>
@@ -464,7 +531,36 @@
     </div>
 
     <div class="modalBody">
-      <textarea id="bulkRoster" placeholder="Example:
+      <div class="rosterGrid">
+        <div class="rosterGuide" aria-hidden="true">
+          <span class="rosterGuideLine hi">C</span>
+          <span class="rosterGuideLine hi">V</span>
+          <span class="rosterGuideLine">3</span>
+          <span class="rosterGuideLine">4</span>
+          <span class="rosterGuideLine">5</span>
+          <span class="rosterGuideLine">6</span>
+          <span class="rosterGuideLine">7</span>
+          <span class="rosterGuideLine">8</span>
+          <span class="rosterGuideLine">9</span>
+          <span class="rosterGuideLine">10</span>
+          <span class="rosterGuideLine">11</span>
+          <span class="rosterGuideLine">12</span>
+          <span class="rosterGuideDivider"></span>
+          <span class="rosterGuideLine hi">C</span>
+          <span class="rosterGuideLine hi">V</span>
+          <span class="rosterGuideLine">3</span>
+          <span class="rosterGuideLine">4</span>
+          <span class="rosterGuideLine">5</span>
+          <span class="rosterGuideLine">6</span>
+          <span class="rosterGuideLine">7</span>
+          <span class="rosterGuideLine">8</span>
+          <span class="rosterGuideLine">9</span>
+          <span class="rosterGuideLine">10</span>
+          <span class="rosterGuideLine">11</span>
+          <span class="rosterGuideLine">12</span>
+        </div>
+
+        <textarea id="bulkRoster" placeholder="Example:
 Gingerly
 Lurkxer
 Sedrata
@@ -472,6 +568,8 @@ Sedrata
 (12 lines for Team A)
 …
 (12 lines for Team B)"></textarea>
+      </div>
+
       <div class="modalHint">
         Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Empty lines are preserved as empty player slots.
       </div>
@@ -526,7 +624,7 @@ const ROLE_LABELS = ["C","V","3","4","5","6","7","8","9","10","11","12"];
 const SAME_TEAM_POINT_STATS = new Set([1,3,5,11]);
 const OTHER_TEAM_POINT_STATS = new Set([0,12,13,14]);
 
-const DEFAULT_TEAM_COLOR = "#808080";
+const DEFAULT_TEAM_COLOR = "#c8c8c8";
 
 const DEFAULT_STATE = () => ({
   names: Array.from({length: TOTAL_ROWS}, () => ""),
@@ -751,6 +849,7 @@ function makeSepRow(label, hex){
 
 function makePlayerRow(r, roleLabel){
   const tr = document.createElement("tr");
+  tr.className = "player-row " + ((r % ROWS_PER_TEAM) % 2 === 0 ? "alt-dark" : "alt-black");
 
   const tdRole = document.createElement("td");
   tdRole.className = "role";
