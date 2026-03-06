@@ -18,8 +18,6 @@
     --rowH: 26px;
 
     --roleW: 40px;
-    --scoreW: 88px;
-
     --playerW: clamp(124px, 13vw, 148px);
     --miscW: 60px;
 
@@ -36,6 +34,8 @@
     --lastBg:#fff;
     --lastText:#000;
     --danger:#d83a3a;
+
+    --scoreFlash:#00ff66;
   }
 
   *{ box-sizing:border-box; }
@@ -52,24 +52,41 @@
 
   .topbar{
     height: var(--topbarH);
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items:center;
+    gap:10px;
+    padding:10px 10px 8px;
+    border-bottom:1px solid #1b1b1b;
+  }
+
+  .topLeft,
+  .topRight{
     display:flex;
     gap:10px;
     align-items:center;
-    padding:10px 10px 8px;
-    border-bottom:1px solid #1b1b1b;
+    min-width:0;
+  }
+
+  .topRight{
+    justify-content:flex-end;
     flex-wrap:nowrap;
   }
-  .topbar .group{
+
+  .group{
     display:flex;
     gap:8px;
     align-items:center;
     flex-wrap:nowrap;
+    min-width:0;
   }
+
   .topbar label{
     font-size:12px;
     opacity:.9;
     white-space:nowrap;
   }
+
   input[type="text"]{
     height:28px;
     border-radius:8px;
@@ -79,7 +96,13 @@
     padding:0 10px;
     font-size:13px;
     outline:none;
+    min-width:0;
   }
+
+  #teamAName, #teamBName{
+    width:150px;
+  }
+
   input[type="color"]{
     height:28px;
     width:40px;
@@ -99,8 +122,10 @@
     padding:0 12px;
     white-space:nowrap;
   }
+
   button:active{ transform:translateY(1px); }
   button:disabled{ opacity:.45; }
+
   .btnDanger{
     background:var(--danger);
     border-color:transparent;
@@ -108,7 +133,43 @@
     font-weight:800;
   }
 
-  .spacer{ flex:1; }
+  .scoreWrap{
+    justify-self:center;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .scoreTop{
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:.5px;
+    text-align:center;
+    min-width:120px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+
+  .scoreNum{
+    min-width:28px;
+    display:inline-block;
+    text-align:center;
+    transition: color .25s ease, opacity .4s ease;
+  }
+
+  .scoreNum.flash{
+    color:var(--scoreFlash);
+  }
+
+  .scoreFlipBtn{
+    height:26px;
+    min-width:32px;
+    padding:0 8px;
+    font-size:12px;
+    border-radius:8px;
+  }
 
   .tableWrap{
     height: calc(100vh - var(--topbarH));
@@ -147,21 +208,6 @@
     font-weight:700;
   }
 
-  th.scoreHead, td.scoreCell{
-    width:var(--scoreW);
-    background:#050505;
-    font-size:var(--fontB);
-    font-weight:800;
-    letter-spacing:.3px;
-  }
-  th.scoreHead{
-    text-align:center;
-  }
-  .scoreDisplay{
-    font-size:15px;
-    font-weight:900;
-  }
-
   th.player, td.player{
     width:var(--playerW);
     text-align:left;
@@ -175,8 +221,9 @@
   }
 
   th.stat, td.stat{
-    width: calc((100% - var(--roleW) - var(--scoreW) - var(--playerW) - var(--miscW)) / 14);
+    width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 15);
   }
+
   th.stat.misc, td.stat.misc{
     width: var(--miscW);
   }
@@ -190,7 +237,7 @@
     cursor:pointer;
     touch-action:manipulation;
     -webkit-touch-callout:none;
-    transition: background-color .08s ease, color .08s ease;
+    transition: background-color .12s ease, color .12s ease, opacity .22s ease;
   }
 
   td.stat.pressed,
@@ -221,14 +268,14 @@
     user-select:text;
   }
 
+  thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
   thead th[data-col="3"],  tbody td[data-col="3"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="4"],  tbody td[data-col="4"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="6"],  tbody td[data-col="6"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="8"],  tbody td[data-col="8"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="5"],  tbody td[data-col="5"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="7"],  tbody td[data-col="7"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="10"], tbody td[data-col="10"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
   thead th[data-col="11"], tbody td[data-col="11"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="12"], tbody td[data-col="12"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="13"], tbody td[data-col="13"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
   thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="15"], tbody td[data-col="15"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
 
   .modalOverlay{
     position:fixed;
@@ -239,6 +286,7 @@
     justify-content:center;
     z-index:9999;
   }
+
   .modal{
     width:min(980px, 94vw);
     height:min(620px, 88vh);
@@ -250,6 +298,7 @@
     overflow:hidden;
     box-shadow:0 20px 70px rgba(0,0,0,.65);
   }
+
   .modalHeader{
     padding:14px 16px;
     border-bottom:1px solid #1f1f1f;
@@ -258,16 +307,19 @@
     justify-content:space-between;
     gap:12px;
   }
+
   .modalTitle{
     font-size:14px;
     font-weight:800;
     letter-spacing:.2px;
   }
+
   .modalSub{
     font-size:11px;
     opacity:.75;
     margin-top:2px;
   }
+
   .modalBody{
     padding:14px 16px;
     display:flex;
@@ -275,6 +327,7 @@
     gap:10px;
     flex:1;
   }
+
   .modalBody textarea{
     flex:1;
     width:100%;
@@ -289,10 +342,12 @@
     resize:none;
     white-space:pre-wrap;
   }
+
   .modalHint{
     font-size:11px;
     opacity:.75;
   }
+
   .modalFooter{
     padding:12px 16px;
     border-top:1px solid #1f1f1f;
@@ -300,11 +355,31 @@
     gap:10px;
     justify-content:flex-end;
   }
+
   .btnPrimary{
     background:var(--accent);
     border-color:transparent;
     color:#000;
     font-weight:800;
+  }
+
+  @media (max-width: 1100px){
+    .topbar{
+      grid-template-columns: 1fr;
+      height:auto;
+      gap:8px;
+    }
+    .scoreWrap{
+      order:2;
+      justify-self:center;
+    }
+    .topRight{
+      justify-content:flex-start;
+      flex-wrap:wrap;
+    }
+    .tableWrap{
+      height: calc(100vh - 110px);
+    }
   }
 </style>
 </head>
@@ -312,56 +387,66 @@
 <body>
 
 <div class="topbar">
-  <div class="group">
-    <label>Team A</label>
-    <input id="teamAName" type="text" value="Team A" />
-    <input id="teamAColor" type="color" value="#2aa2ff" title="Team A separator colour" />
+  <div class="topLeft">
+    <div class="group">
+      <label>Team A</label>
+      <input id="teamAName" type="text" value="" />
+      <input id="teamAColor" type="color" value="#808080" title="Team A separator colour" />
+    </div>
+
+    <div class="group">
+      <label>Team B</label>
+      <input id="teamBName" type="text" value="" />
+      <input id="teamBColor" type="color" value="#808080" title="Team B separator colour" />
+    </div>
   </div>
 
-  <div class="group">
-    <label>Team B</label>
-    <input id="teamBName" type="text" value="Team B" />
-    <input id="teamBColor" type="color" value="#888888" title="Team B separator colour" />
+  <div class="scoreWrap">
+    <div id="scoreDisplay" class="scoreTop">
+      <span id="scoreLeft" class="scoreNum">0</span>
+      <span>-</span>
+      <span id="scoreRight" class="scoreNum">0</span>
+    </div>
+    <button id="scoreFlipBtn" class="scoreFlipBtn" title="Flip scoreboard orientation">⇄</button>
   </div>
 
-  <div class="spacer"></div>
-
-  <button id="rosterBtn">Roster</button>
-  <button id="undoBtn" disabled>Undo</button>
-  <button id="redoBtn" disabled>Redo</button>
-  <button id="resetBtn">Reset</button>
-  <button id="exportBtn">Export CSV</button>
+  <div class="topRight">
+    <button id="rosterBtn">Roster</button>
+    <button id="undoBtn" disabled>Undo</button>
+    <button id="redoBtn" disabled>Redo</button>
+    <button id="resetBtn">Reset</button>
+    <button id="exportBtn">Export CSV</button>
+  </div>
 </div>
 
 <div class="tableWrap">
   <table id="grid">
     <thead>
       <tr>
-        <th class="role" data-col="0"> </th>
-        <th class="scoreHead" data-col="1"><span id="scoreDisplay" class="scoreDisplay">0 - 0</span></th>
-        <th class="player" data-col="2">Player</th>
+        <th class="role" data-col="0">#</th>
+        <th class="player" data-col="1">Player</th>
 
-        <th class="stat" data-col="3">Spiking Errors</th>
-        <th class="stat" data-col="4">Ape Kills</th>
-        <th class="stat" data-col="5">Ape Attempts</th>
-        <th class="stat" data-col="6">Kills</th>
-        <th class="stat" data-col="7">Attempts</th>
+        <th class="stat" data-col="2">Spiking Errors</th>
+        <th class="stat" data-col="3">Ape Kills</th>
+        <th class="stat" data-col="4">Ape Attempts</th>
+        <th class="stat" data-col="5">Kills</th>
+        <th class="stat" data-col="6">Attempts</th>
 
-        <th class="stat" data-col="8">Kill</th>
-        <th class="stat" data-col="9">Soft</th>
-        <th class="stat" data-col="10">One Touch</th>
+        <th class="stat" data-col="7">Kill</th>
+        <th class="stat" data-col="8">Soft</th>
+        <th class="stat" data-col="9">One Touch</th>
 
-        <th class="stat" data-col="11">Assists</th>
+        <th class="stat" data-col="10">Assists</th>
 
-        <th class="stat" data-col="12">Spike</th>
-        <th class="stat" data-col="13">BFs</th>
+        <th class="stat" data-col="11">Spike</th>
+        <th class="stat" data-col="12">BFs</th>
 
-        <th class="stat" data-col="14">Aces</th>
+        <th class="stat" data-col="13">Aces</th>
 
-        <th class="stat" data-col="15">Misc. Errors</th>
-        <th class="stat" data-col="16">Set. Errors</th>
+        <th class="stat" data-col="14">Misc. Errors</th>
+        <th class="stat" data-col="15">Set. Errors</th>
 
-        <th class="stat misc" data-col="17">Serve Errors</th>
+        <th class="stat misc" data-col="16">Serve Errors</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -380,14 +465,15 @@
 
     <div class="modalBody">
       <textarea id="bulkRoster" placeholder="Example:
-gum_umbxll
-lani
-...
+Gingerly
+Lurkxer
+Sedrata
+…
 (12 lines for Team A)
-...
+…
 (12 lines for Team B)"></textarea>
       <div class="modalHint">
-        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Extra lines are ignored.
+        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B. Empty lines are preserved as empty player slots.
       </div>
     </div>
 
@@ -409,7 +495,7 @@ lani
     </div>
     <div class="modalBody" style="flex:0 0 auto;">
       <div class="modalHint" style="font-size:13px;line-height:1.4;opacity:.9;">
-        <strong>Reset stats</strong> keeps team names, usernames, colours, score, and undo availability for actions before the reset.<br><br>
+        <strong>Reset stats</strong> keeps team names, usernames, colours, and remains undoable.<br><br>
         <strong>Reset board</strong> wipes everything back to a blank slate and clears the full undo/redo history.
       </div>
     </div>
@@ -437,20 +523,21 @@ const ROWS_PER_TEAM = 12;
 const TOTAL_ROWS = ROWS_PER_TEAM * 2;
 const ROLE_LABELS = ["C","V","3","4","5","6","7","8","9","10","11","12"];
 
-const SCORE_RULES = {
-  teamA: new Set([1,3,5,11]),
-  teamB: new Set([0,12,13,14])
-};
+const SAME_TEAM_POINT_STATS = new Set([1,3,5,11]);
+const OTHER_TEAM_POINT_STATS = new Set([0,12,13,14]);
+
+const DEFAULT_TEAM_COLOR = "#808080";
 
 const DEFAULT_STATE = () => ({
-  names: Array.from({length: TOTAL_ROWS}, (_,i)=> i<ROWS_PER_TEAM ? `Player ${i+1}` : `Opponent ${i-ROWS_PER_TEAM+1}`),
-  values: Array.from({length: TOTAL_ROWS}, ()=> Array.from({length: STATS.length}, ()=> 0)),
-  teamAName: "Team A",
-  teamBName: "Team B",
-  teamAColor: "#2aa2ff",
-  teamBColor: "#888888",
+  names: Array.from({length: TOTAL_ROWS}, () => ""),
+  values: Array.from({length: TOTAL_ROWS}, () => Array.from({length: STATS.length}, () => 0)),
+  teamAName: "",
+  teamBName: "",
+  teamAColor: DEFAULT_TEAM_COLOR,
+  teamBColor: DEFAULT_TEAM_COLOR,
   scoreA: 0,
   scoreB: 0,
+  scoreFlipped: false,
   lastTouched: null
 });
 
@@ -458,33 +545,74 @@ const state = DEFAULT_STATE();
 const undoStack = [];
 const redoStack = [];
 
+let scoreFlashTimer = null;
+
 function isTeamARow(r){ return r < ROWS_PER_TEAM; }
-function isScoringStatForTeamA(c){ return SCORE_RULES.teamA.has(c); }
-function isScoringStatForTeamB(c){ return SCORE_RULES.teamB.has(c); }
-function isScoreEvent(r,c){
-  if(isTeamARow(r)) return isScoringStatForTeamA(c);
-  return isScoringStatForTeamB(c);
-}
+
 function scoreSideForEvent(r,c){
-  if(!isScoreEvent(r,c)) return null;
-  return isTeamARow(r) ? "A" : "B";
+  if(SAME_TEAM_POINT_STATS.has(c)){
+    return isTeamARow(r) ? "A" : "B";
+  }
+  if(OTHER_TEAM_POINT_STATS.has(c)){
+    return isTeamARow(r) ? "B" : "A";
+  }
+  return null;
 }
 
-function cloneAction(action){
-  return JSON.parse(JSON.stringify(action));
+function cloneDeep(obj){
+  return JSON.parse(JSON.stringify(obj));
 }
 
 function cellId(r,c){ return `cell_${r}_${c}`; }
 function nameId(r){ return `name_${r}`; }
 
+function clearScoreFlash(){
+  document.getElementById("scoreLeft").classList.remove("flash");
+  document.getElementById("scoreRight").classList.remove("flash");
+  if(scoreFlashTimer){
+    clearTimeout(scoreFlashTimer);
+    scoreFlashTimer = null;
+  }
+}
+
+function flashScoringSide(side){
+  clearScoreFlash();
+
+  const left = document.getElementById("scoreLeft");
+  const right = document.getElementById("scoreRight");
+
+  const flashLeft =
+    (!state.scoreFlipped && side === "A") ||
+    ( state.scoreFlipped && side === "B");
+
+  const target = flashLeft ? left : right;
+  target.classList.add("flash");
+
+  scoreFlashTimer = setTimeout(() => {
+    target.classList.remove("flash");
+    scoreFlashTimer = null;
+  }, 1000);
+}
+
 function updateScoreDisplay(){
-  const el = document.getElementById("scoreDisplay");
-  if(el) el.textContent = `${state.scoreA} - ${state.scoreB}`;
+  const left = document.getElementById("scoreLeft");
+  const right = document.getElementById("scoreRight");
+
+  if(state.scoreFlipped){
+    left.textContent = state.scoreB;
+    right.textContent = state.scoreA;
+  }else{
+    left.textContent = state.scoreA;
+    right.textContent = state.scoreB;
+  }
 }
 
 function saveToLocal(){
-  try{ localStorage.setItem("v42_state", JSON.stringify(state)); }catch(e){}
+  try{
+    localStorage.setItem("v42_state", JSON.stringify(state));
+  }catch(e){}
 }
+
 function loadFromLocal(){
   try{
     const raw = localStorage.getItem("v42_state");
@@ -495,13 +623,9 @@ function loadFromLocal(){
     }
   }catch(e){}
 }
-function normalizeLines(text){
-  return text
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .split("\n")
-    .map(s=>s.trim())
-    .filter(s=>s.length>0);
+
+function splitPreserveEmptyLines(text){
+  return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
 }
 
 function setLastTouched(ref){
@@ -510,7 +634,9 @@ function setLastTouched(ref){
     const prevCell = document.getElementById(cellId(prev.r, prev.c));
     if(prevCell) prevCell.classList.remove("last-hit");
   }
+
   state.lastTouched = ref ? {r: ref.r, c: ref.c} : null;
+
   if(ref){
     const nextCell = document.getElementById(cellId(ref.r, ref.c));
     if(nextCell) nextCell.classList.add("last-hit");
@@ -519,7 +645,7 @@ function setLastTouched(ref){
 
 function pulseCell(td){
   td.classList.add("pressed");
-  setTimeout(()=> td.classList.remove("pressed"), 120);
+  setTimeout(() => td.classList.remove("pressed"), 120);
 }
 
 function updateCellDisplay(r,c){
@@ -536,7 +662,7 @@ function updateUndoRedoButtons(){
 }
 
 function pushAction(action){
-  undoStack.push(cloneAction(action));
+  undoStack.push(cloneDeep(action));
   redoStack.length = 0;
   updateUndoRedoButtons();
 }
@@ -546,17 +672,21 @@ function applyDelta(r,c,delta){
   updateCellDisplay(r,c);
 }
 
-function applyScoreDelta(side, delta){
+function applyScoreDelta(side, delta, shouldFlash = false){
   if(side === "A") state.scoreA = Math.max(0, state.scoreA + delta);
   if(side === "B") state.scoreB = Math.max(0, state.scoreB + delta);
   updateScoreDisplay();
+
+  if(shouldFlash && delta > 0){
+    flashScoringSide(side);
+  }
 }
 
 function applyAction(action, direction){
   if(action.type === "stat"){
     applyDelta(action.r, action.c, action.delta * direction);
-    if(action.scoreSide) applyScoreDelta(action.scoreSide, direction);
-    setLastTouched(action.lastTouched || null);
+    if(action.scoreSide) applyScoreDelta(action.scoreSide, direction, false);
+    setLastTouched(action.afterLastTouched || null);
     return;
   }
 
@@ -572,6 +702,7 @@ function applyAction(action, direction){
       state.scoreB = 0;
       updateScoreDisplay();
       setLastTouched(null);
+      clearScoreFlash();
     }else{
       for(let r=0;r<TOTAL_ROWS;r++){
         for(let c=0;c<STATS.length;c++){
@@ -583,6 +714,7 @@ function applyAction(action, direction){
       state.scoreB = action.prevScoreB;
       updateScoreDisplay();
       setLastTouched(action.prevLastTouched || null);
+      clearScoreFlash();
     }
   }
 }
@@ -602,6 +734,7 @@ function render(){
   document.getElementById("teamAColor").value = state.teamAColor;
   document.getElementById("teamBColor").value = state.teamBColor;
   updateScoreDisplay();
+
   if(state.lastTouched) setLastTouched(state.lastTouched);
 }
 
@@ -609,9 +742,9 @@ function makeSepRow(label, hex){
   const tr = document.createElement("tr");
   tr.className = "sep";
   const td = document.createElement("td");
-  td.colSpan = 18;
+  td.colSpan = 17;
   td.style.background = hex;
-  td.textContent = label;
+  td.textContent = label || "";
   tr.appendChild(td);
   return tr;
 }
@@ -625,27 +758,21 @@ function makePlayerRow(r, roleLabel){
   tdRole.dataset.col = "0";
   tr.appendChild(tdRole);
 
-  const tdScore = document.createElement("td");
-  tdScore.className = "scoreCell";
-  tdScore.dataset.col = "1";
-  tdScore.textContent = "";
-  tr.appendChild(tdScore);
-
   const tdName = document.createElement("td");
   tdName.className = "player";
   tdName.contentEditable = "true";
   tdName.id = nameId(r);
-  tdName.dataset.col = "2";
+  tdName.dataset.col = "1";
   tdName.textContent = state.names[r] || "";
   tdName.addEventListener("input", ()=>{
-    state.names[r] = tdName.textContent.trim();
+    state.names[r] = tdName.textContent;
     saveToLocal();
   });
   tr.appendChild(tdName);
 
   for(let c=0; c<STATS.length; c++){
     const td = document.createElement("td");
-    const colIndex = 3 + c;
+    const colIndex = 2 + c;
 
     td.className = "stat" + (c === STATS.length - 1 ? " misc" : "");
     td.dataset.col = String(colIndex);
@@ -654,47 +781,65 @@ function makePlayerRow(r, roleLabel){
     const v = state.values[r][c];
     td.textContent = v ? String(v) : "";
 
-    let handledPointerTap = false;
     const activateCell = (e)=>{
       if(e){
         e.preventDefault();
         e.stopPropagation();
       }
+
       pulseCell(td);
-      state.values[r][c] = (state.values[r][c] || 0) + 1;
-      td.textContent = String(state.values[r][c]);
+
+      state.values[r][c] += 1;
+      updateCellDisplay(r,c);
 
       const scoreSide = scoreSideForEvent(r,c);
-      if(scoreSide) applyScoreDelta(scoreSide, 1);
+      if(scoreSide) applyScoreDelta(scoreSide, 1, true);
 
-      const action = { type:"stat", r, c, delta:1, scoreSide, lastTouched:{r,c} };
+      const action = {
+        type:"stat",
+        r,
+        c,
+        delta:1,
+        scoreSide,
+        afterLastTouched:{r,c}
+      };
+
       pushAction(action);
       setLastTouched({r,c});
       saveToLocal();
     };
 
-    td.addEventListener("pointerdown", ()=> pulseCell(td));
-    td.addEventListener("pointerup", (e)=>{
-      handledPointerTap = true;
-      activateCell(e);
-      setTimeout(()=>{ handledPointerTap = false; }, 0);
+    td.addEventListener("pointerdown", (e)=>{
+      if(e.pointerType !== "mouse"){
+        activateCell(e);
+      }
     });
+
     td.addEventListener("click", (e)=>{
-      if(handledPointerTap) return;
+      if(e.detail === 0) return;
       activateCell(e);
     });
-    td.addEventListener("touchstart", ()=> pulseCell(td), {passive:true});
 
     tr.appendChild(td);
   }
+
   return tr;
 }
 
 document.getElementById("undoBtn").addEventListener("click", ()=>{
   const action = undoStack.pop();
   if(!action) return;
+
   applyAction(action, -1);
-  redoStack.push(cloneAction(action));
+  redoStack.push(cloneDeep(action));
+
+  const newLast = undoStack.length ? undoStack[undoStack.length - 1] : null;
+  if(newLast && newLast.type === "stat"){
+    setLastTouched({r:newLast.r, c:newLast.c});
+  }else{
+    setLastTouched(null);
+  }
+
   updateUndoRedoButtons();
   saveToLocal();
 });
@@ -702,40 +847,59 @@ document.getElementById("undoBtn").addEventListener("click", ()=>{
 document.getElementById("redoBtn").addEventListener("click", ()=>{
   const action = redoStack.pop();
   if(!action) return;
-  applyAction(action, +1);
-  undoStack.push(cloneAction(action));
+
+  if(action.type === "stat"){
+    applyDelta(action.r, action.c, action.delta);
+    if(action.scoreSide) applyScoreDelta(action.scoreSide, 1, true);
+    undoStack.push(cloneDeep(action));
+    setLastTouched({r:action.r, c:action.c});
+  }else if(action.type === "resetStats"){
+    applyAction(action, 1);
+    undoStack.push(cloneDeep(action));
+    setLastTouched(null);
+  }
+
   updateUndoRedoButtons();
   saveToLocal();
 });
 
+document.getElementById("scoreFlipBtn").addEventListener("click", ()=>{
+  state.scoreFlipped = !state.scoreFlipped;
+  clearScoreFlash();
+  updateScoreDisplay();
+  saveToLocal();
+});
+
 const resetOverlay = document.getElementById("resetModalOverlay");
+
 function openResetModal(){ resetOverlay.style.display = "flex"; }
 function closeResetModal(){ resetOverlay.style.display = "none"; }
 
 document.getElementById("resetBtn").addEventListener("click", openResetModal);
 document.getElementById("closeResetTop").addEventListener("click", closeResetModal);
 document.getElementById("closeResetBottom").addEventListener("click", closeResetModal);
-resetOverlay.addEventListener("click", (e)=>{
-  if(e.target === resetOverlay) closeResetModal();
-});
 
 document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
   const action = {
     type:"resetStats",
-    prevValues: state.values.map(row=> row.slice()),
+    prevValues: state.values.map(row => row.slice()),
     prevScoreA: state.scoreA,
     prevScoreB: state.scoreB,
     prevLastTouched: state.lastTouched ? {...state.lastTouched} : null
   };
+
   for(let r=0;r<TOTAL_ROWS;r++){
     for(let c=0;c<STATS.length;c++){
-      state.values[r][c]=0;
+      state.values[r][c] = 0;
     }
   }
+
   state.scoreA = 0;
   state.scoreB = 0;
+
   pushAction(action);
   setLastTouched(null);
+  clearScoreFlash();
   render();
   saveToLocal();
   closeResetModal();
@@ -746,26 +910,27 @@ document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
   undoStack.length = 0;
   redoStack.length = 0;
   updateUndoRedoButtons();
+  clearScoreFlash();
   render();
   saveToLocal();
   closeResetModal();
 });
 
 document.getElementById("exportBtn").addEventListener("click", ()=>{
-  const header = ["Role","","Player", ...STATS];
+  const header = ["#","Player", ...STATS];
   const rows = [header];
 
-  rows.push([`== ${state.teamAName} ==`,"", "", ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamAName || ""} ==`, "", ...Array(STATS.length).fill("")]);
   for(let r=0;r<ROWS_PER_TEAM;r++){
-    rows.push([ROLE_LABELS[r], "", state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+    rows.push([ROLE_LABELS[r], state.names[r] || "", ...state.values[r].map(v => v ? String(v) : "")]);
   }
 
-  rows.push([`== ${state.teamBName} ==`,"", "", ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamBName || ""} ==`, "", ...Array(STATS.length).fill("")]);
   for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
-    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], "", state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v => v ? String(v) : "")]);
   }
 
-  rows.push(["Score", `${state.scoreA} - ${state.scoreB}`, "", ...Array(STATS.length).fill("")]);
+  rows.push(["Score", `${state.scoreA} - ${state.scoreB}`, ...Array(STATS.length).fill("")]);
 
   const csv = rows.map(row =>
     row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(",")
@@ -784,19 +949,26 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
 
 document.getElementById("teamAName").addEventListener("input", (e)=>{
   state.teamAName = e.target.value;
-  render(); saveToLocal();
+  render();
+  saveToLocal();
 });
+
 document.getElementById("teamBName").addEventListener("input", (e)=>{
   state.teamBName = e.target.value;
-  render(); saveToLocal();
+  render();
+  saveToLocal();
 });
+
 document.getElementById("teamAColor").addEventListener("input", (e)=>{
   state.teamAColor = e.target.value;
-  render(); saveToLocal();
+  render();
+  saveToLocal();
 });
+
 document.getElementById("teamBColor").addEventListener("input", (e)=>{
   state.teamBColor = e.target.value;
-  render(); saveToLocal();
+  render();
+  saveToLocal();
 });
 
 const overlay = document.getElementById("modalOverlay");
@@ -808,8 +980,9 @@ const bulkRoster = document.getElementById("bulkRoster");
 
 function openRoster(){
   overlay.style.display = "flex";
-  setTimeout(()=> bulkRoster.focus(), 50);
+  setTimeout(() => bulkRoster.focus(), 50);
 }
+
 function closeRoster(){
   overlay.style.display = "none";
 }
@@ -818,22 +991,18 @@ rosterBtn.addEventListener("click", openRoster);
 closeTop.addEventListener("click", closeRoster);
 closeBottom.addEventListener("click", closeRoster);
 
-overlay.addEventListener("click", (e)=>{
-  if(e.target === overlay) closeRoster();
-});
-
 applyRosterBtn.addEventListener("click", ()=>{
-  const lines = normalizeLines(bulkRoster.value);
-  if(lines.length === 0) { closeRoster(); return; }
+  const lines = splitPreserveEmptyLines(bulkRoster.value);
 
-  for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length);i++){
-    state.names[i] = lines[i];
+  if(lines.length === 1 && lines[0] === ""){
+    closeRoster();
+    return;
   }
 
-  if(lines.length > ROWS_PER_TEAM){
-    for(let i=0;i<Math.min(ROWS_PER_TEAM, lines.length-ROWS_PER_TEAM);i++){
-      state.names[ROWS_PER_TEAM + i] = lines[ROWS_PER_TEAM + i];
-    }
+  const capped = lines.slice(0, TOTAL_ROWS);
+
+  for(let i=0;i<capped.length;i++){
+    state.names[i] = capped[i];
   }
 
   render();
