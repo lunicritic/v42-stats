@@ -18,11 +18,9 @@
     --rowH: 26px;
 
     --roleW: 40px;
+    --scoreW: 88px;
 
-    /* tightened a tiny bit to buy width back */
     --playerW: clamp(124px, 13vw, 148px);
-
-    /* misc column reserved width (slightly safer than 56) */
     --miscW: 60px;
 
     --fontH: 10px;
@@ -30,9 +28,14 @@
 
     --accent: #2aa2ff;
 
-    /* bold gridlines */
     --gridBold: #666;
     --gridBoldW: 2px;
+
+    --pressBg:#0f0;
+    --pressText:#000;
+    --lastBg:#fff;
+    --lastText:#000;
+    --danger:#d83a3a;
   }
 
   *{ box-sizing:border-box; }
@@ -43,10 +46,10 @@
     background:var(--bg);
     color:var(--text);
     font-family:-apple-system, system-ui, Arial, sans-serif;
-    overflow:hidden; /* no page scroll */
+    overflow:hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Top controls bar */
   .topbar{
     height: var(--topbarH);
     display:flex;
@@ -98,11 +101,15 @@
   }
   button:active{ transform:translateY(1px); }
   button:disabled{ opacity:.45; }
+  .btnDanger{
+    background:var(--danger);
+    border-color:transparent;
+    color:#fff;
+    font-weight:800;
+  }
 
   .spacer{ flex:1; }
 
-  /* Table container
-     IMPORTANT: Safe-area is handled as padding, so table can be width:100% reliably. */
   .tableWrap{
     height: calc(100vh - var(--topbarH));
     width: 100vw;
@@ -114,7 +121,7 @@
   table{
     border-collapse:collapse;
     table-layout:fixed;
-    width:100%;   /* <- key fix (no more 100vw mismatch) */
+    width:100%;
     height:100%;
   }
 
@@ -140,6 +147,21 @@
     font-weight:700;
   }
 
+  th.scoreHead, td.scoreCell{
+    width:var(--scoreW);
+    background:#050505;
+    font-size:var(--fontB);
+    font-weight:800;
+    letter-spacing:.3px;
+  }
+  th.scoreHead{
+    text-align:center;
+  }
+  .scoreDisplay{
+    font-size:15px;
+    font-weight:900;
+  }
+
   th.player, td.player{
     width:var(--playerW);
     text-align:left;
@@ -149,15 +171,11 @@
     overflow:hidden;
     text-overflow:ellipsis;
     font-size:var(--fontB);
-
-    /* bold divider after Player column */
     border-right: var(--gridBoldW) solid var(--gridBold) !important;
   }
 
-  /* --- STAT COLUMN SIZING ---
-     Now computed off table's *actual* width (100% inside safe-area padding). */
   th.stat, td.stat{
-    width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 14);
+    width: calc((100% - var(--roleW) - var(--scoreW) - var(--playerW) - var(--miscW)) / 14);
   }
   th.stat.misc, td.stat.misc{
     width: var(--miscW);
@@ -168,11 +186,22 @@
     font-size:var(--fontB);
   }
 
-  td.stat{ cursor:pointer; }
+  td.stat{
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-touch-callout:none;
+    transition: background-color .08s ease, color .08s ease;
+  }
 
+  td.stat.pressed,
   td.stat:active{
-    background:#0f0;
-    color:#000;
+    background:var(--pressBg) !important;
+    color:var(--pressText) !important;
+  }
+
+  td.stat.last-hit{
+    background:var(--lastBg) !important;
+    color:var(--lastText) !important;
   }
 
   tr.sep td{
@@ -192,23 +221,15 @@
     user-select:text;
   }
 
-  
-/* --- BOLD SECTION GRIDLINES ---
-   Columns in full table:
-   0 role, 1 player, 2..16 stats
-*/
-thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Spiking Errors */
-thead th[data-col="3"],  tbody td[data-col="3"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Ape Kills + Ape Attempts */
-thead th[data-col="5"],  tbody td[data-col="5"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Kills + Attempts */
+  thead th[data-col="3"],  tbody td[data-col="3"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="4"],  tbody td[data-col="4"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="6"],  tbody td[data-col="6"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="8"],  tbody td[data-col="8"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="11"], tbody td[data-col="11"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="12"], tbody td[data-col="12"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
+  thead th[data-col="15"], tbody td[data-col="15"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
 
-thead th[data-col="7"],  tbody td[data-col="7"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Kill + Soft + One Touch */
-thead th[data-col="10"], tbody td[data-col="10"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Assists */
-thead th[data-col="11"], tbody td[data-col="11"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Spike + BFs */
-thead th[data-col="13"], tbody td[data-col="13"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Aces */
-thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; } /* Errors group */
-
-
-  /* -------- ROSTER MODAL -------- */
   .modalOverlay{
     position:fixed;
     inset:0;
@@ -317,37 +338,36 @@ thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW)
     <thead>
       <tr>
         <th class="role" data-col="0"> </th>
-        <th class="player" data-col="1">Player</th>
+        <th class="scoreHead" data-col="1"><span id="scoreDisplay" class="scoreDisplay">0 - 0</span></th>
+        <th class="player" data-col="2">Player</th>
 
-        <th class="stat" data-col="2">Spiking Errors</th>
-        <th class="stat" data-col="3">Ape Kills</th>
-        <th class="stat" data-col="4">Ape Attempts</th>
-        <th class="stat" data-col="5">Kills</th>
-        <th class="stat" data-col="6">Attempts</th>
+        <th class="stat" data-col="3">Spiking Errors</th>
+        <th class="stat" data-col="4">Ape Kills</th>
+        <th class="stat" data-col="5">Ape Attempts</th>
+        <th class="stat" data-col="6">Kills</th>
+        <th class="stat" data-col="7">Attempts</th>
 
-        <th class="stat" data-col="7">Kill</th>
-        <th class="stat" data-col="8">Soft</th>
-        <th class="stat" data-col="9">One Touch</th>
+        <th class="stat" data-col="8">Kill</th>
+        <th class="stat" data-col="9">Soft</th>
+        <th class="stat" data-col="10">One Touch</th>
 
-        <th class="stat" data-col="10">Assists</th>
+        <th class="stat" data-col="11">Assists</th>
 
-        <th class="stat" data-col="11">Spike</th>
-        <th class="stat" data-col="12">BFs</th>
+        <th class="stat" data-col="12">Spike</th>
+        <th class="stat" data-col="13">BFs</th>
 
-        <th class="stat" data-col="13">Aces</th>
+        <th class="stat" data-col="14">Aces</th>
 
-        <th class="stat" data-col="14">Misc. Errors</th>
-        <th class="stat" data-col="15">Set. Errors</th>
+        <th class="stat" data-col="15">Misc. Errors</th>
+        <th class="stat" data-col="16">Set. Errors</th>
 
-        <th class="stat misc" data-col="16">Serve Errors</th>
-
+        <th class="stat misc" data-col="17">Serve Errors</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
 
-<!-- Roster modal -->
 <div id="modalOverlay" class="modalOverlay">
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modalHeader">
@@ -378,8 +398,32 @@ lani
   </div>
 </div>
 
+<div id="resetModalOverlay" class="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(560px, 92vw);height:auto;">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle">Reset options</div>
+        <div class="modalSub">Choose whether to clear only match stats or wipe the full board.</div>
+      </div>
+      <button id="closeResetTop">Close</button>
+    </div>
+    <div class="modalBody" style="flex:0 0 auto;">
+      <div class="modalHint" style="font-size:13px;line-height:1.4;opacity:.9;">
+        <strong>Reset stats</strong> keeps team names, usernames, colours, score, and undo availability for actions before the reset.<br><br>
+        <strong>Reset board</strong> wipes everything back to a blank slate and clears the full undo/redo history.
+      </div>
+    </div>
+    <div class="modalFooter" style="justify-content:space-between;flex-wrap:wrap;">
+      <button id="resetStatsBtn">Reset stats</button>
+      <div style="display:flex;gap:10px;">
+        <button id="closeResetBottom">Cancel</button>
+        <button id="resetBoardBtn" class="btnDanger">Reset board</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ---------- config ---------- */
 const STATS = [
   "Spiking Errors","Ape Kills","Ape Attempts","Kills","Attempts",
   "Kill","Soft","One Touch",
@@ -391,41 +435,52 @@ const STATS = [
 
 const ROWS_PER_TEAM = 12;
 const TOTAL_ROWS = ROWS_PER_TEAM * 2;
-
 const ROLE_LABELS = ["C","V","3","4","5","6","7","8","9","10","11","12"];
 
-/* ---------- state ---------- */
-const state = {
+const SCORE_RULES = {
+  teamA: new Set([1,3,5,11]),
+  teamB: new Set([0,12,13,14])
+};
+
+const DEFAULT_STATE = () => ({
   names: Array.from({length: TOTAL_ROWS}, (_,i)=> i<ROWS_PER_TEAM ? `Player ${i+1}` : `Opponent ${i-ROWS_PER_TEAM+1}`),
   values: Array.from({length: TOTAL_ROWS}, ()=> Array.from({length: STATS.length}, ()=> 0)),
-
   teamAName: "Team A",
   teamBName: "Team B",
   teamAColor: "#2aa2ff",
-  teamBColor: "#888888"
-};
+  teamBColor: "#888888",
+  scoreA: 0,
+  scoreB: 0,
+  lastTouched: null
+});
 
+const state = DEFAULT_STATE();
 const undoStack = [];
 const redoStack = [];
 
-/* ---------- helpers ---------- */
-function pushAction(action){
-  undoStack.push(action);
-  redoStack.length = 0;
-  updateUndoRedoButtons();
+function isTeamARow(r){ return r < ROWS_PER_TEAM; }
+function isScoringStatForTeamA(c){ return SCORE_RULES.teamA.has(c); }
+function isScoringStatForTeamB(c){ return SCORE_RULES.teamB.has(c); }
+function isScoreEvent(r,c){
+  if(isTeamARow(r)) return isScoringStatForTeamA(c);
+  return isScoringStatForTeamB(c);
 }
-function updateUndoRedoButtons(){
-  document.getElementById("undoBtn").disabled = undoStack.length === 0;
-  document.getElementById("redoBtn").disabled = redoStack.length === 0;
+function scoreSideForEvent(r,c){
+  if(!isScoreEvent(r,c)) return null;
+  return isTeamARow(r) ? "A" : "B";
 }
-function applyAction(action, direction){
-  const {r,c,delta} = action;
-  state.values[r][c] = Math.max(0, state.values[r][c] + (delta * direction));
-  const cell = document.getElementById(cellId(r,c));
-  if(cell) cell.textContent = state.values[r][c] ? String(state.values[r][c]) : "";
+
+function cloneAction(action){
+  return JSON.parse(JSON.stringify(action));
 }
+
 function cellId(r,c){ return `cell_${r}_${c}`; }
 function nameId(r){ return `name_${r}`; }
+
+function updateScoreDisplay(){
+  const el = document.getElementById("scoreDisplay");
+  if(el) el.textContent = `${state.scoreA} - ${state.scoreB}`;
+}
 
 function saveToLocal(){
   try{ localStorage.setItem("v42_state", JSON.stringify(state)); }catch(e){}
@@ -435,7 +490,9 @@ function loadFromLocal(){
     const raw = localStorage.getItem("v42_state");
     if(!raw) return;
     const parsed = JSON.parse(raw);
-    if(parsed && parsed.names && parsed.values) Object.assign(state, parsed);
+    if(parsed && parsed.names && parsed.values){
+      Object.assign(state, DEFAULT_STATE(), parsed);
+    }
   }catch(e){}
 }
 function normalizeLines(text){
@@ -447,7 +504,89 @@ function normalizeLines(text){
     .filter(s=>s.length>0);
 }
 
-/* ---------- render ---------- */
+function setLastTouched(ref){
+  const prev = state.lastTouched;
+  if(prev){
+    const prevCell = document.getElementById(cellId(prev.r, prev.c));
+    if(prevCell) prevCell.classList.remove("last-hit");
+  }
+  state.lastTouched = ref ? {r: ref.r, c: ref.c} : null;
+  if(ref){
+    const nextCell = document.getElementById(cellId(ref.r, ref.c));
+    if(nextCell) nextCell.classList.add("last-hit");
+  }
+}
+
+function pulseCell(td){
+  td.classList.add("pressed");
+  setTimeout(()=> td.classList.remove("pressed"), 120);
+}
+
+function updateCellDisplay(r,c){
+  const cell = document.getElementById(cellId(r,c));
+  if(cell){
+    const v = state.values[r][c];
+    cell.textContent = v ? String(v) : "";
+  }
+}
+
+function updateUndoRedoButtons(){
+  document.getElementById("undoBtn").disabled = undoStack.length === 0;
+  document.getElementById("redoBtn").disabled = redoStack.length === 0;
+}
+
+function pushAction(action){
+  undoStack.push(cloneAction(action));
+  redoStack.length = 0;
+  updateUndoRedoButtons();
+}
+
+function applyDelta(r,c,delta){
+  state.values[r][c] = Math.max(0, state.values[r][c] + delta);
+  updateCellDisplay(r,c);
+}
+
+function applyScoreDelta(side, delta){
+  if(side === "A") state.scoreA = Math.max(0, state.scoreA + delta);
+  if(side === "B") state.scoreB = Math.max(0, state.scoreB + delta);
+  updateScoreDisplay();
+}
+
+function applyAction(action, direction){
+  if(action.type === "stat"){
+    applyDelta(action.r, action.c, action.delta * direction);
+    if(action.scoreSide) applyScoreDelta(action.scoreSide, direction);
+    setLastTouched(action.lastTouched || null);
+    return;
+  }
+
+  if(action.type === "resetStats"){
+    if(direction === 1){
+      for(let r=0;r<TOTAL_ROWS;r++){
+        for(let c=0;c<STATS.length;c++){
+          state.values[r][c] = 0;
+          updateCellDisplay(r,c);
+        }
+      }
+      state.scoreA = 0;
+      state.scoreB = 0;
+      updateScoreDisplay();
+      setLastTouched(null);
+    }else{
+      for(let r=0;r<TOTAL_ROWS;r++){
+        for(let c=0;c<STATS.length;c++){
+          state.values[r][c] = action.prevValues[r][c];
+          updateCellDisplay(r,c);
+        }
+      }
+      state.scoreA = action.prevScoreA;
+      state.scoreB = action.prevScoreB;
+      updateScoreDisplay();
+      setLastTouched(action.prevLastTouched || null);
+    }
+  }
+}
+
 function render(){
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
@@ -462,13 +601,15 @@ function render(){
   document.getElementById("teamBName").value = state.teamBName;
   document.getElementById("teamAColor").value = state.teamAColor;
   document.getElementById("teamBColor").value = state.teamBColor;
+  updateScoreDisplay();
+  if(state.lastTouched) setLastTouched(state.lastTouched);
 }
 
 function makeSepRow(label, hex){
   const tr = document.createElement("tr");
   tr.className = "sep";
   const td = document.createElement("td");
-  td.colSpan = 17; // role + player + 15 stats
+  td.colSpan = 18;
   td.style.background = hex;
   td.textContent = label;
   tr.appendChild(td);
@@ -484,11 +625,17 @@ function makePlayerRow(r, roleLabel){
   tdRole.dataset.col = "0";
   tr.appendChild(tdRole);
 
+  const tdScore = document.createElement("td");
+  tdScore.className = "scoreCell";
+  tdScore.dataset.col = "1";
+  tdScore.textContent = "";
+  tr.appendChild(tdScore);
+
   const tdName = document.createElement("td");
   tdName.className = "player";
   tdName.contentEditable = "true";
   tdName.id = nameId(r);
-  tdName.dataset.col = "1";
+  tdName.dataset.col = "2";
   tdName.textContent = state.names[r] || "";
   tdName.addEventListener("input", ()=>{
     state.names[r] = tdName.textContent.trim();
@@ -498,9 +645,7 @@ function makePlayerRow(r, roleLabel){
 
   for(let c=0; c<STATS.length; c++){
     const td = document.createElement("td");
-
-    // Full table column index (0 role, 1 player, stats start at 2)
-    const colIndex = 2 + c;
+    const colIndex = 3 + c;
 
     td.className = "stat" + (c === STATS.length - 1 ? " misc" : "");
     td.dataset.col = String(colIndex);
@@ -509,24 +654,47 @@ function makePlayerRow(r, roleLabel){
     const v = state.values[r][c];
     td.textContent = v ? String(v) : "";
 
-    td.addEventListener("click", ()=>{
+    let handledPointerTap = false;
+    const activateCell = (e)=>{
+      if(e){
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      pulseCell(td);
       state.values[r][c] = (state.values[r][c] || 0) + 1;
       td.textContent = String(state.values[r][c]);
-      pushAction({r,c,delta:1});
+
+      const scoreSide = scoreSideForEvent(r,c);
+      if(scoreSide) applyScoreDelta(scoreSide, 1);
+
+      const action = { type:"stat", r, c, delta:1, scoreSide, lastTouched:{r,c} };
+      pushAction(action);
+      setLastTouched({r,c});
       saveToLocal();
+    };
+
+    td.addEventListener("pointerdown", ()=> pulseCell(td));
+    td.addEventListener("pointerup", (e)=>{
+      handledPointerTap = true;
+      activateCell(e);
+      setTimeout(()=>{ handledPointerTap = false; }, 0);
     });
+    td.addEventListener("click", (e)=>{
+      if(handledPointerTap) return;
+      activateCell(e);
+    });
+    td.addEventListener("touchstart", ()=> pulseCell(td), {passive:true});
 
     tr.appendChild(td);
   }
   return tr;
 }
 
-/* ---------- controls ---------- */
 document.getElementById("undoBtn").addEventListener("click", ()=>{
   const action = undoStack.pop();
   if(!action) return;
   applyAction(action, -1);
-  redoStack.push(action);
+  redoStack.push(cloneAction(action));
   updateUndoRedoButtons();
   saveToLocal();
 });
@@ -535,35 +703,69 @@ document.getElementById("redoBtn").addEventListener("click", ()=>{
   const action = redoStack.pop();
   if(!action) return;
   applyAction(action, +1);
-  undoStack.push(action);
+  undoStack.push(cloneAction(action));
   updateUndoRedoButtons();
   saveToLocal();
 });
 
-document.getElementById("resetBtn").addEventListener("click", ()=>{
+const resetOverlay = document.getElementById("resetModalOverlay");
+function openResetModal(){ resetOverlay.style.display = "flex"; }
+function closeResetModal(){ resetOverlay.style.display = "none"; }
+
+document.getElementById("resetBtn").addEventListener("click", openResetModal);
+document.getElementById("closeResetTop").addEventListener("click", closeResetModal);
+document.getElementById("closeResetBottom").addEventListener("click", closeResetModal);
+resetOverlay.addEventListener("click", (e)=>{
+  if(e.target === resetOverlay) closeResetModal();
+});
+
+document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
+  const action = {
+    type:"resetStats",
+    prevValues: state.values.map(row=> row.slice()),
+    prevScoreA: state.scoreA,
+    prevScoreB: state.scoreB,
+    prevLastTouched: state.lastTouched ? {...state.lastTouched} : null
+  };
   for(let r=0;r<TOTAL_ROWS;r++){
-    for(let c=0;c<STATS.length;c++) state.values[r][c]=0;
+    for(let c=0;c<STATS.length;c++){
+      state.values[r][c]=0;
+    }
   }
+  state.scoreA = 0;
+  state.scoreB = 0;
+  pushAction(action);
+  setLastTouched(null);
+  render();
+  saveToLocal();
+  closeResetModal();
+});
+
+document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
+  Object.assign(state, DEFAULT_STATE());
   undoStack.length = 0;
   redoStack.length = 0;
   updateUndoRedoButtons();
   render();
   saveToLocal();
+  closeResetModal();
 });
 
 document.getElementById("exportBtn").addEventListener("click", ()=>{
-  const header = ["Role","Player", ...STATS];
+  const header = ["Role","","Player", ...STATS];
   const rows = [header];
 
-  rows.push([`== ${state.teamAName} ==`,"", ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamAName} ==`,"", "", ...Array(STATS.length).fill("")]);
   for(let r=0;r<ROWS_PER_TEAM;r++){
-    rows.push([ROLE_LABELS[r], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+    rows.push([ROLE_LABELS[r], "", state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
   }
 
-  rows.push([`== ${state.teamBName} ==`,"", ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamBName} ==`,"", "", ...Array(STATS.length).fill("")]);
   for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
-    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
+    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], "", state.names[r] || "", ...state.values[r].map(v=> v?String(v):"")]);
   }
+
+  rows.push(["Score", `${state.scoreA} - ${state.scoreB}`, "", ...Array(STATS.length).fill("")]);
 
   const csv = rows.map(row =>
     row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(",")
@@ -580,7 +782,6 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
   URL.revokeObjectURL(url);
 });
 
-/* Team settings */
 document.getElementById("teamAName").addEventListener("input", (e)=>{
   state.teamAName = e.target.value;
   render(); saveToLocal();
@@ -598,7 +799,6 @@ document.getElementById("teamBColor").addEventListener("input", (e)=>{
   render(); saveToLocal();
 });
 
-/* ---------- roster modal ---------- */
 const overlay = document.getElementById("modalOverlay");
 const rosterBtn = document.getElementById("rosterBtn");
 const closeTop = document.getElementById("closeRosterTop");
@@ -643,9 +843,9 @@ applyRosterBtn.addEventListener("click", ()=>{
 
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && overlay.style.display === "flex") closeRoster();
+  if(e.key === "Escape" && resetOverlay.style.display === "flex") closeResetModal();
 });
 
-/* ---------- init ---------- */
 loadFromLocal();
 render();
 updateUndoRedoButtons();
