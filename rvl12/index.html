@@ -40,6 +40,8 @@
 
     --rowDark:#111;
     --rowBlack:#000;
+
+    --flashDuration: 360ms;
   }
 
   *{ box-sizing:border-box; }
@@ -81,6 +83,7 @@
   .topRight{
     justify-content:flex-end;
     flex-wrap:nowrap;
+    margin-left:auto;
   }
 
   .hidden-ui{
@@ -93,12 +96,6 @@
     align-items:center;
     flex-wrap:nowrap;
     min-width:0;
-  }
-
-  .topbar label{
-    font-size:12px;
-    opacity:.9;
-    white-space:nowrap;
   }
 
   input[type="text"]{
@@ -119,7 +116,7 @@
   }
 
   #teamAName, #teamBName{
-    width:150px;
+    width:132px;
   }
 
   input[type="color"]{
@@ -140,6 +137,7 @@
     font-size:13px;
     padding:0 12px;
     white-space:nowrap;
+    transition: background-color .14s ease, color .14s ease, border-color .14s ease;
   }
 
   button:active{ transform:translateY(1px); }
@@ -159,11 +157,17 @@
     font-weight:800;
   }
 
+  .menuBtn-active{
+    background:#fff !important;
+    color:#000 !important;
+    border-color:transparent !important;
+  }
+
   .scoreWrap{
     position:absolute;
-    left:calc(50% + 4px);
+    left:50%;
     top:50%;
-    transform:translate(-50%, -50%);
+    transform:translate(calc(-50% - 2px), -50%);
     display:grid;
     grid-template-columns: 32px auto 32px;
     align-items:center;
@@ -199,12 +203,12 @@
   }
 
   .scoreFlipBtn,
-  .eyeBtn{
+  .visibilityBtn{
     height:26px;
     min-width:32px;
     width:32px;
     padding:0;
-    font-size:12px;
+    font-size:13px;
     border-radius:8px;
     display:flex;
     align-items:center;
@@ -249,13 +253,21 @@
 
   th.player, td.player{
     width:var(--playerW);
-    text-align:left;
-    padding-left:8px;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
     font-size:var(--fontB);
     border-right: var(--gridBoldW) solid var(--gridBold) !important;
+  }
+
+  th.player{
+    text-align:center;
+    padding-left:0;
+  }
+
+  td.player{
+    text-align:left;
+    padding-left:8px;
   }
 
   th.stat, td.stat{
@@ -287,7 +299,6 @@
     cursor:pointer;
     touch-action:manipulation;
     -webkit-touch-callout:none;
-    transition: background-color .12s ease, color .12s ease, opacity .22s ease;
   }
 
   td.stat.pressed,
@@ -304,7 +315,11 @@
   .flash-white{
     background:#fff !important;
     color:#000 !important;
-    transition: background-color .28s ease, color .28s ease;
+    transition: none !important;
+  }
+
+  .flash-fade{
+    transition: background-color var(--flashDuration) ease, color var(--flashDuration) ease !important;
   }
 
   tr.sep td{
@@ -316,7 +331,6 @@
     padding-left:10px;
     border-top: 1px solid #000;
     border-bottom: 1px solid #000;
-    transition: background-color .28s ease, color .28s ease;
   }
 
   [contenteditable]{
@@ -377,6 +391,14 @@
     margin-top:2px;
   }
 
+  .modalCloseX{
+    min-width:30px;
+    width:30px;
+    padding:0;
+    font-size:16px;
+    line-height:1;
+  }
+
   .modalBody{
     padding:14px 16px;
     display:flex;
@@ -417,7 +439,7 @@
     top:50%;
     width:12px;
     height:1px;
-    background:rgba(255,255,255,.72);
+    background:#2a2a2a;
     transform:translate(-50%, -50%);
     pointer-events:none;
   }
@@ -463,6 +485,18 @@
     display:flex;
     gap:10px;
     justify-content:flex-end;
+    align-items:center;
+  }
+
+  .resetExplain{
+    font-size:12px;
+    line-height:1.45;
+    opacity:.92;
+  }
+
+  .resetExplain strong{
+    display:block;
+    margin-bottom:3px;
   }
 
   @media (max-width: 1100px){
@@ -475,7 +509,7 @@
     }
     .scoreWrap{
       top:18px;
-      transform:translateX(-50%);
+      transform:translate(calc(-50% - 2px), 0);
     }
     .topRight{
       flex-wrap:wrap;
@@ -492,20 +526,18 @@
 <div class="topbar">
   <div class="topLeft" id="teamControls">
     <div class="group">
-      <label>Team A</label>
-      <input id="teamAName" type="text" value="" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" />
+      <input id="teamAName" type="text" value="" placeholder="Team A" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" />
       <input id="teamAColor" type="color" value="#c8c8c8" title="Team A separator colour" />
     </div>
 
     <div class="group">
-      <label>Team B</label>
-      <input id="teamBName" type="text" value="" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" />
+      <input id="teamBName" type="text" value="" placeholder="Team B" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" />
       <input id="teamBColor" type="color" value="#c8c8c8" title="Team B separator colour" />
     </div>
   </div>
 
   <div class="scoreWrap">
-    <button id="visibilityBtn" class="eyeBtn" title="Hide extra controls">👁</button>
+    <button id="visibilityBtn" class="visibilityBtn" title="Hide extra controls">▣</button>
 
     <div id="scoreDisplay" class="scoreTop">
       <span id="scoreLeft" class="scoreNum">0</span>
@@ -518,10 +550,10 @@
 
   <div class="topRight">
     <button id="rosterBtn">Roster</button>
-    <button id="undoBtn" disabled>Undo</button>
-    <button id="redoBtn" disabled>Redo</button>
-    <button id="resetBtn">Reset</button>
+    <button id="resetBtn">Reset ≡</button>
     <button id="exportBtn">Export CSV</button>
+    <button id="undoBtn" disabled>←</button>
+    <button id="redoBtn" disabled>→</button>
   </div>
 </div>
 
@@ -566,7 +598,7 @@
         <div class="modalTitle">Paste roster</div>
         <div class="modalSub">Team A then Team B, one username per line.</div>
       </div>
-      <button id="closeRosterTop">Close</button>
+      <button id="closeRosterTop" class="modalCloseX">×</button>
     </div>
 
     <div class="modalBody">
@@ -645,18 +677,27 @@ D_ingK"></textarea>
         <div class="modalTitle">Reset options</div>
         <div class="modalSub">Choose whether to clear only match stats or wipe the full board.</div>
       </div>
-      <button id="closeResetTop">Close</button>
+      <button id="closeResetTop" class="modalCloseX">×</button>
     </div>
+
     <div class="modalBody" style="flex:0 0 auto;">
-      <div class="modalHint" style="font-size:13px;line-height:1.4;opacity:.9;">
-        <strong>Reset stats</strong> keeps team names, usernames, colours, and remains undoable.<br><br>
-        <strong>Reset board</strong> wipes everything back to a blank slate and clears the full undo/redo history.
+      <div class="resetExplain">
+        <strong>Reset stats</strong>
+        Keeps team names, usernames, colours, and remains undoable.<br>
+        Choose this once you've finished stat-tracking a set.
+      </div>
+
+      <div class="resetExplain">
+        <strong>Reset board</strong>
+        Wipes everything back to a blank slate and clears the full undo/redo history.<br>
+        Choose this once you've finished stat-tracking a game.
       </div>
     </div>
+
     <div class="modalFooter" style="justify-content:space-between;flex-wrap:wrap;">
       <button id="resetStatsBtn">Reset stats</button>
       <div style="display:flex;gap:10px;">
-        <button id="closeResetBottom">Cancel</button>
+        <button id="closeResetBottom">Close</button>
         <button id="resetBoardBtn" class="btnDanger">Reset board</button>
       </div>
     </div>
@@ -768,15 +809,15 @@ function updateTopVisibility(){
   const rosterBtn = document.getElementById("rosterBtn");
   const resetBtn = document.getElementById("resetBtn");
   const exportBtn = document.getElementById("exportBtn");
-  const eyeBtn = document.getElementById("visibilityBtn");
+  const visibilityBtn = document.getElementById("visibilityBtn");
 
   controls.classList.toggle("hidden-ui", state.controlsHidden);
   rosterBtn.classList.toggle("hidden-ui", state.controlsHidden);
   resetBtn.classList.toggle("hidden-ui", state.controlsHidden);
   exportBtn.classList.toggle("hidden-ui", state.controlsHidden);
 
-  eyeBtn.textContent = state.controlsHidden ? "🙈" : "👁";
-  eyeBtn.title = state.controlsHidden ? "Show extra controls" : "Hide extra controls";
+  visibilityBtn.textContent = state.controlsHidden ? "▢" : "▣";
+  visibilityBtn.title = state.controlsHidden ? "Show extra controls" : "Hide extra controls";
 }
 
 function saveToLocal(){
@@ -818,6 +859,15 @@ function setLastTouched(ref){
 function pulseCell(td){
   td.classList.add("pressed");
   setTimeout(() => td.classList.remove("pressed"), 120);
+}
+
+function clearLastTouchedImmediately(){
+  const prev = state.lastTouched;
+  if(!prev) return;
+  const prevCell = document.getElementById(cellId(prev.r, prev.c));
+  if(prevCell){
+    prevCell.classList.remove("last-hit");
+  }
 }
 
 function updateCellDisplay(r,c){
@@ -870,30 +920,40 @@ function getContrastText(hex){
   return luminance < 0.58 ? "#fff" : "#000";
 }
 
-function flashElement(el, duration = 300){
+function startInstantFlash(el){
   if(!el) return;
   if(el.dataset.animating === "1") return;
   el.dataset.animating = "1";
+  el.classList.remove("flash-fade");
   el.classList.add("flash-white");
-  setTimeout(() => {
-    el.classList.remove("flash-white");
-    delete el.dataset.animating;
-  }, duration);
 }
 
-function animateNameUpdate(el, newText, delay = 0, duration = 300){
+function endFlashToBase(el){
+  if(!el) return;
+  el.classList.add("flash-fade");
+  requestAnimationFrame(() => {
+    el.classList.remove("flash-white");
+    setTimeout(() => {
+      el.classList.remove("flash-fade");
+      delete el.dataset.animating;
+    }, 380);
+  });
+}
+
+function flashElement(el, hold = 35){
+  if(!el) return;
+  startInstantFlash(el);
+  setTimeout(() => endFlashToBase(el), hold);
+}
+
+function animateNameUpdate(el, newText, delay = 0){
   setTimeout(() => {
     if(!el) return;
-    if(el.dataset.animating === "1") return;
-    el.dataset.animating = "1";
-    el.classList.add("flash-white");
+    startInstantFlash(el);
     setTimeout(() => {
       el.textContent = newText;
-    }, 65);
-    setTimeout(() => {
-      el.classList.remove("flash-white");
-      delete el.dataset.animating;
-    }, duration);
+      endFlashToBase(el);
+    }, 40);
   }, delay);
 }
 
@@ -1003,7 +1063,7 @@ function makePlayerRow(r, roleLabel){
     saveToLocal();
 
     if(before !== after){
-      flashElement(tdName, 280);
+      flashElement(tdName);
     }
 
     tdName.dataset.startValue = after;
@@ -1038,6 +1098,7 @@ function makePlayerRow(r, roleLabel){
         e.stopPropagation();
       }
 
+      clearLastTouchedImmediately();
       pulseCell(td);
 
       state.values[r][c] += 1;
@@ -1145,10 +1206,33 @@ document.getElementById("visibilityBtn").addEventListener("click", ()=>{
   saveToLocal();
 });
 
+const overlay = document.getElementById("modalOverlay");
 const resetOverlay = document.getElementById("resetModalOverlay");
 
-function openResetModal(){ resetOverlay.style.display = "flex"; }
-function closeResetModal(){ resetOverlay.style.display = "none"; }
+function setMenuActive(btn, active){
+  btn.classList.toggle("menuBtn-active", active);
+}
+
+function openRoster(){
+  overlay.style.display = "flex";
+  setMenuActive(document.getElementById("rosterBtn"), true);
+  setTimeout(() => bulkRoster.focus(), 50);
+}
+
+function closeRoster(){
+  overlay.style.display = "none";
+  setMenuActive(document.getElementById("rosterBtn"), false);
+}
+
+function openResetModal(){
+  resetOverlay.style.display = "flex";
+  setMenuActive(document.getElementById("resetBtn"), true);
+}
+
+function closeResetModal(){
+  resetOverlay.style.display = "none";
+  setMenuActive(document.getElementById("resetBtn"), false);
+}
 
 document.getElementById("resetBtn").addEventListener("click", openResetModal);
 document.getElementById("closeResetTop").addEventListener("click", closeResetModal);
@@ -1178,7 +1262,7 @@ document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
   if(changedIds.length){
     changedIds.forEach(id => {
       const el = document.getElementById(id);
-      if(el) el.classList.add("flash-white");
+      startInstantFlash(el);
     });
 
     setTimeout(() => {
@@ -1194,14 +1278,12 @@ document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
       setLastTouched(null);
       saveToLocal();
       updateUndoRedoButtons();
-    }, 90);
 
-    setTimeout(() => {
       changedIds.forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.classList.remove("flash-white");
+        endFlashToBase(el);
       });
-    }, 300);
+    }, 40);
   } else {
     state.scoreA = 0;
     state.scoreB = 0;
@@ -1213,63 +1295,66 @@ document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
 });
 
 document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
-  const table = document.getElementById("grid");
-  const orderedCells = Array.from(table.querySelectorAll("thead th, tbody td"));
-  const defaultState = DEFAULT_STATE();
-
   closeResetModal();
 
-  orderedCells.forEach((el, i) => {
-    setTimeout(() => {
-      el.classList.add("flash-white");
+  const headerCells = Array.from(document.querySelectorAll("thead th"));
+  const bodyRows = Array.from(document.querySelectorAll("tbody tr"));
+  const ordered = [];
 
-      setTimeout(() => {
-        if(el.tagName === "TH"){
-          return;
-        }
-
-        if(el.id === sepId("A")){
-          el.textContent = "";
-          el.style.background = DEFAULT_TEAM_COLOR;
-          el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
-          return;
-        }
-
-        if(el.id === sepId("B")){
-          el.textContent = "";
-          el.style.background = DEFAULT_TEAM_COLOR;
-          el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
-          return;
-        }
-
-        if(el.classList.contains("player")){
-          el.textContent = "";
-          return;
-        }
-
-        if(el.classList.contains("stat")){
-          el.textContent = "";
-          return;
-        }
-      }, 60);
-
-      setTimeout(() => {
-        el.classList.remove("flash-white");
-      }, 260);
-    }, i * 8);
+  headerCells.forEach(cell => ordered.push(cell));
+  bodyRows.forEach(row => {
+    Array.from(row.children).forEach(cell => ordered.push(cell));
   });
 
-  const totalDuration = orderedCells.length * 8 + 290;
+  ordered.forEach((el, i) => {
+    setTimeout(() => {
+      startInstantFlash(el);
+    }, i * 2);
+  });
+
+  const baseDelay = ordered.length * 2 + 40;
 
   setTimeout(() => {
-    Object.assign(state, defaultState);
+    ordered.forEach(el => {
+      if(el.tagName === "TH") return;
+
+      if(el.id === sepId("A")){
+        el.textContent = "";
+        el.style.background = DEFAULT_TEAM_COLOR;
+        el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
+        return;
+      }
+
+      if(el.id === sepId("B")){
+        el.textContent = "";
+        el.style.background = DEFAULT_TEAM_COLOR;
+        el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
+        return;
+      }
+
+      if(el.classList.contains("player")){
+        el.textContent = "";
+        return;
+      }
+
+      if(el.classList.contains("stat")){
+        el.textContent = "";
+      }
+    });
+
+    ordered.forEach(el => endFlashToBase(el));
+
+    Object.assign(state, DEFAULT_STATE());
     undoStack.length = 0;
     redoStack.length = 0;
     clearScoreFlash();
-    render();
     updateUndoRedoButtons();
     saveToLocal();
-  }, totalDuration);
+
+    setTimeout(() => {
+      render();
+    }, 390);
+  }, baseDelay);
 });
 
 document.getElementById("exportBtn").addEventListener("click", ()=>{
@@ -1341,21 +1426,11 @@ document.getElementById("teamBColor").addEventListener("input", (e)=>{
   saveToLocal();
 });
 
-const overlay = document.getElementById("modalOverlay");
 const rosterBtn = document.getElementById("rosterBtn");
 const closeTop = document.getElementById("closeRosterTop");
 const closeBottom = document.getElementById("closeRosterBottom");
 const applyRosterBtn = document.getElementById("applyRosterBtn");
 const bulkRoster = document.getElementById("bulkRoster");
-
-function openRoster(){
-  overlay.style.display = "flex";
-  setTimeout(() => bulkRoster.focus(), 50);
-}
-
-function closeRoster(){
-  overlay.style.display = "none";
-}
 
 rosterBtn.addEventListener("click", openRoster);
 closeTop.addEventListener("click", closeRoster);
@@ -1387,7 +1462,7 @@ applyRosterBtn.addEventListener("click", ()=>{
   updates.forEach((item, seqIndex) => {
     const el = document.getElementById(nameId(item.index));
     if(!el) return;
-    animateNameUpdate(el, item.value, seqIndex * 34, 290);
+    animateNameUpdate(el, item.value, seqIndex * 34);
   });
 });
 
