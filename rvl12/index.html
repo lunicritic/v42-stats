@@ -83,6 +83,10 @@
     flex-wrap:nowrap;
   }
 
+  .hidden-ui{
+    display:none !important;
+  }
+
   .group{
     display:flex;
     gap:8px;
@@ -111,7 +115,7 @@
 
   input[type="text"]::placeholder,
   textarea::placeholder{
-    color:#7a7a7a;
+    color:#707070;
   }
 
   #teamAName, #teamBName{
@@ -157,10 +161,11 @@
 
   .scoreWrap{
     position:absolute;
-    left:50%;
+    left:calc(50% + 4px);
     top:50%;
     transform:translate(-50%, -50%);
-    display:flex;
+    display:grid;
+    grid-template-columns: 32px auto 32px;
     align-items:center;
     gap:8px;
     z-index:1;
@@ -193,12 +198,17 @@
     text-align:center;
   }
 
-  .scoreFlipBtn{
+  .scoreFlipBtn,
+  .eyeBtn{
     height:26px;
     min-width:32px;
-    padding:0 8px;
+    width:32px;
+    padding:0;
     font-size:12px;
     border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
 
   .tableWrap{
@@ -385,6 +395,7 @@
   }
 
   .rosterGuide{
+    position:relative;
     border-radius:12px;
     border:1px solid #2a2a2a;
     background:#0d0d0d;
@@ -397,6 +408,18 @@
     justify-items:center;
     overflow:hidden;
     user-select:none;
+  }
+
+  .rosterGuide::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:12px;
+    height:1px;
+    background:rgba(255,255,255,.72);
+    transform:translate(-50%, -50%);
+    pointer-events:none;
   }
 
   .rosterGuideLine{
@@ -442,13 +465,6 @@
     justify-content:flex-end;
   }
 
-  .btnPrimary{
-    background:var(--accent);
-    border-color:transparent;
-    color:#000;
-    font-weight:800;
-  }
-
   @media (max-width: 1100px){
     .topbar{
       height:auto;
@@ -474,7 +490,7 @@
 <body>
 
 <div class="topbar">
-  <div class="topLeft">
+  <div class="topLeft" id="teamControls">
     <div class="group">
       <label>Team A</label>
       <input id="teamAName" type="text" value="" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" />
@@ -489,11 +505,14 @@
   </div>
 
   <div class="scoreWrap">
+    <button id="visibilityBtn" class="eyeBtn" title="Hide extra controls">👁</button>
+
     <div id="scoreDisplay" class="scoreTop">
       <span id="scoreLeft" class="scoreNum">0</span>
       <span class="scoreDash">-</span>
       <span id="scoreRight" class="scoreNum">0</span>
     </div>
+
     <button id="scoreFlipBtn" class="scoreFlipBtn" title="Flip scoreboard orientation">⇄</button>
   </div>
 
@@ -673,7 +692,8 @@ const DEFAULT_STATE = () => ({
   scoreA: 0,
   scoreB: 0,
   scoreFlipped: false,
-  lastTouched: null
+  lastTouched: null,
+  controlsHidden: false
 });
 
 const state = DEFAULT_STATE();
@@ -741,6 +761,22 @@ function updateScoreDisplay(){
     left.textContent = state.scoreA;
     right.textContent = state.scoreB;
   }
+}
+
+function updateTopVisibility(){
+  const controls = document.getElementById("teamControls");
+  const rosterBtn = document.getElementById("rosterBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const exportBtn = document.getElementById("exportBtn");
+  const eyeBtn = document.getElementById("visibilityBtn");
+
+  controls.classList.toggle("hidden-ui", state.controlsHidden);
+  rosterBtn.classList.toggle("hidden-ui", state.controlsHidden);
+  resetBtn.classList.toggle("hidden-ui", state.controlsHidden);
+  exportBtn.classList.toggle("hidden-ui", state.controlsHidden);
+
+  eyeBtn.textContent = state.controlsHidden ? "🙈" : "👁";
+  eyeBtn.title = state.controlsHidden ? "Show extra controls" : "Hide extra controls";
 }
 
 function saveToLocal(){
@@ -834,19 +870,31 @@ function getContrastText(hex){
   return luminance < 0.58 ? "#fff" : "#000";
 }
 
-function flashElement(el, duration = 320){
+function flashElement(el, duration = 300){
   if(!el) return;
+  if(el.dataset.animating === "1") return;
+  el.dataset.animating = "1";
   el.classList.add("flash-white");
-  setTimeout(() => el.classList.remove("flash-white"), duration);
+  setTimeout(() => {
+    el.classList.remove("flash-white");
+    delete el.dataset.animating;
+  }, duration);
 }
 
-function flashElementSequence(ids, step = 34, duration = 260){
-  ids.forEach((id, i) => {
+function animateNameUpdate(el, newText, delay = 0, duration = 300){
+  setTimeout(() => {
+    if(!el) return;
+    if(el.dataset.animating === "1") return;
+    el.dataset.animating = "1";
+    el.classList.add("flash-white");
     setTimeout(() => {
-      const el = document.getElementById(id);
-      if(el) flashElement(el, duration);
-    }, i * step);
-  });
+      el.textContent = newText;
+    }, 65);
+    setTimeout(() => {
+      el.classList.remove("flash-white");
+      delete el.dataset.animating;
+    }, duration);
+  }, delay);
 }
 
 function applyAction(action, direction){
@@ -901,6 +949,7 @@ function render(){
   document.getElementById("teamAColor").value = state.teamAColor;
   document.getElementById("teamBColor").value = state.teamBColor;
   updateScoreDisplay();
+  updateTopVisibility();
 
   if(state.lastTouched) setLastTouched(state.lastTouched);
 }
@@ -938,15 +987,26 @@ function makePlayerRow(r, roleLabel){
   tdName.dataset.col = "1";
   tdName.textContent = state.names[r] || "";
 
+  tdName.addEventListener("focus", ()=>{
+    tdName.dataset.startValue = tdName.textContent;
+  });
+
   tdName.addEventListener("input", ()=>{
     state.names[r] = tdName.textContent;
     saveToLocal();
   });
 
   tdName.addEventListener("blur", ()=>{
-    state.names[r] = tdName.textContent;
+    const before = tdName.dataset.startValue ?? "";
+    const after = tdName.textContent;
+    state.names[r] = after;
     saveToLocal();
-    flashElement(tdName, 340);
+
+    if(before !== after){
+      flashElement(tdName, 280);
+    }
+
+    tdName.dataset.startValue = after;
   });
 
   tdName.addEventListener("keydown", (e)=>{
@@ -1079,6 +1139,12 @@ document.getElementById("scoreFlipBtn").addEventListener("click", ()=>{
   saveToLocal();
 });
 
+document.getElementById("visibilityBtn").addEventListener("click", ()=>{
+  state.controlsHidden = !state.controlsHidden;
+  updateTopVisibility();
+  saveToLocal();
+});
+
 const resetOverlay = document.getElementById("resetModalOverlay");
 
 function openResetModal(){ resetOverlay.style.display = "flex"; }
@@ -1097,32 +1163,113 @@ document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
     prevLastTouched: state.lastTouched ? {...state.lastTouched} : null
   };
 
+  const changedIds = [];
   for(let r=0;r<TOTAL_ROWS;r++){
     for(let c=0;c<STATS.length;c++){
-      state.values[r][c] = 0;
+      if(state.values[r][c] !== 0){
+        changedIds.push(cellId(r,c));
+      }
     }
   }
 
-  state.scoreA = 0;
-  state.scoreB = 0;
-
   pushAction(action);
-  setLastTouched(null);
-  clearScoreFlash();
-  render();
-  saveToLocal();
   closeResetModal();
+
+  if(changedIds.length){
+    changedIds.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.classList.add("flash-white");
+    });
+
+    setTimeout(() => {
+      for(let r=0;r<TOTAL_ROWS;r++){
+        for(let c=0;c<STATS.length;c++){
+          state.values[r][c] = 0;
+          updateCellDisplay(r,c);
+        }
+      }
+      state.scoreA = 0;
+      state.scoreB = 0;
+      updateScoreDisplay();
+      setLastTouched(null);
+      saveToLocal();
+      updateUndoRedoButtons();
+    }, 90);
+
+    setTimeout(() => {
+      changedIds.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.remove("flash-white");
+      });
+    }, 300);
+  } else {
+    state.scoreA = 0;
+    state.scoreB = 0;
+    updateScoreDisplay();
+    setLastTouched(null);
+    saveToLocal();
+    updateUndoRedoButtons();
+  }
 });
 
 document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
-  Object.assign(state, DEFAULT_STATE());
-  undoStack.length = 0;
-  redoStack.length = 0;
-  updateUndoRedoButtons();
-  clearScoreFlash();
-  render();
-  saveToLocal();
+  const table = document.getElementById("grid");
+  const orderedCells = Array.from(table.querySelectorAll("thead th, tbody td"));
+  const defaultState = DEFAULT_STATE();
+
   closeResetModal();
+
+  orderedCells.forEach((el, i) => {
+    setTimeout(() => {
+      el.classList.add("flash-white");
+
+      setTimeout(() => {
+        if(el.tagName === "TH"){
+          return;
+        }
+
+        if(el.id === sepId("A")){
+          el.textContent = "";
+          el.style.background = DEFAULT_TEAM_COLOR;
+          el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
+          return;
+        }
+
+        if(el.id === sepId("B")){
+          el.textContent = "";
+          el.style.background = DEFAULT_TEAM_COLOR;
+          el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
+          return;
+        }
+
+        if(el.classList.contains("player")){
+          el.textContent = "";
+          return;
+        }
+
+        if(el.classList.contains("stat")){
+          el.textContent = "";
+          return;
+        }
+      }, 60);
+
+      setTimeout(() => {
+        el.classList.remove("flash-white");
+      }, 260);
+    }, i * 8);
+  });
+
+  const totalDuration = orderedCells.length * 8 + 290;
+
+  setTimeout(() => {
+    Object.assign(state, defaultState);
+    undoStack.length = 0;
+    redoStack.length = 0;
+    clearScoreFlash();
+    render();
+    updateUndoRedoButtons();
+    saveToLocal();
+  }, totalDuration);
 });
 
 document.getElementById("exportBtn").addEventListener("click", ()=>{
@@ -1156,15 +1303,6 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
   URL.revokeObjectURL(url);
 });
 
-function flashTeamControls(team){
-  const nameInput = document.getElementById(team === "A" ? "teamAName" : "teamBName");
-  const colorInput = document.getElementById(team === "A" ? "teamAColor" : "teamBColor");
-  const sep = document.getElementById(sepId(team));
-  flashElement(nameInput, 340);
-  flashElement(colorInput, 340);
-  flashElement(sep, 340);
-}
-
 document.getElementById("teamAName").addEventListener("input", (e)=>{
   state.teamAName = e.target.value;
   render();
@@ -1175,20 +1313,6 @@ document.getElementById("teamBName").addEventListener("input", (e)=>{
   state.teamBName = e.target.value;
   render();
   saveToLocal();
-});
-
-document.getElementById("teamAName").addEventListener("blur", (e)=>{
-  state.teamAName = e.target.value;
-  render();
-  saveToLocal();
-  flashTeamControls("A");
-});
-
-document.getElementById("teamBName").addEventListener("blur", (e)=>{
-  state.teamBName = e.target.value;
-  render();
-  saveToLocal();
-  flashTeamControls("B");
 });
 
 document.getElementById("teamAName").addEventListener("keydown", (e)=>{
@@ -1209,14 +1333,12 @@ document.getElementById("teamAColor").addEventListener("input", (e)=>{
   state.teamAColor = e.target.value;
   render();
   saveToLocal();
-  flashTeamControls("A");
 });
 
 document.getElementById("teamBColor").addEventListener("input", (e)=>{
   state.teamBColor = e.target.value;
   render();
   saveToLocal();
-  flashTeamControls("B");
 });
 
 const overlay = document.getElementById("modalOverlay");
@@ -1248,21 +1370,25 @@ applyRosterBtn.addEventListener("click", ()=>{
   }
 
   const capped = lines.slice(0, TOTAL_ROWS);
+  const updates = [];
 
   for(let i=0;i<capped.length;i++){
-    state.names[i] = capped[i];
+    const nextName = capped[i];
+    const currentName = state.names[i] ?? "";
+    if(nextName !== currentName){
+      updates.push({ index:i, value:nextName });
+      state.names[i] = nextName;
+    }
   }
 
-  render();
   saveToLocal();
-
-  const ids = [];
-  for(let i=0;i<capped.length;i++){
-    ids.push(nameId(i));
-  }
-  flashElementSequence(ids, 34, 280);
-
   closeRoster();
+
+  updates.forEach((item, seqIndex) => {
+    const el = document.getElementById(nameId(item.index));
+    if(!el) return;
+    animateNameUpdate(el, item.value, seqIndex * 34, 290);
+  });
 });
 
 document.addEventListener("keydown", (e)=>{
