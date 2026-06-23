@@ -16,6 +16,7 @@
 
     --headerH: 34px;
     --rowH: 26px;
+    --sepH: 18px;
 
     --roleW: 40px;
     --playerW: clamp(124px, 13vw, 148px);
@@ -126,6 +127,10 @@
     border:1px solid #2a2a2a;
     background:#0d0d0d;
     padding:0;
+  }
+
+  input[type="checkbox"]{
+    accent-color:var(--rosterApply);
   }
 
   button{
@@ -271,7 +276,7 @@
   }
 
   th.stat, td.stat{
-    width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 15);
+    width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 14);
   }
 
   th.stat.misc, td.stat.misc{
@@ -323,7 +328,7 @@
   }
 
   tr.sep td{
-    height: 18px;
+    height: var(--sepH);
     font-size: 12px;
     font-weight: 800;
     letter-spacing: .2px;
@@ -359,8 +364,8 @@
   }
 
   .modal{
-    width:min(980px, 94vw);
-    height:min(620px, 88vh);
+    width:min(1040px, 94vw);
+    height:min(660px, 88vh);
     background:#0a0a0a;
     border:1px solid #2a2a2a;
     border-radius:16px;
@@ -405,72 +410,81 @@
     flex-direction:column;
     gap:10px;
     flex:1;
+    min-height:0;
   }
 
-  .rosterGrid{
+  .rosterSplit{
     display:grid;
-    grid-template-columns: 56px 1fr;
-    gap:12px;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
     flex:1;
     min-height:0;
-    align-items:stretch;
   }
 
-  .rosterGuide{
-    position:relative;
-    border-radius:12px;
+  .rosterTeamBox{
+    border-radius:14px;
     border:1px solid #2a2a2a;
     background:#0d0d0d;
-    padding:12px 0;
-    font-size:13px;
-    line-height:1.25;
-    display:grid;
-    grid-template-rows:repeat(24, 1fr);
-    align-items:center;
-    justify-items:center;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
     overflow:hidden;
-    user-select:none;
   }
 
-  .rosterGuide::after{
-    content:"";
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:12px;
-    height:1px;
-    background:#2a2a2a;
-    transform:translate(-50%, -50%);
-    pointer-events:none;
+  .rosterTeamTitle{
+    height:36px;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    border-bottom:1px solid #252525;
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:.2px;
   }
 
-  .rosterGuideLine{
-    width:100%;
-    text-align:center;
+  .rosterRows{
+    flex:1;
+    display:grid;
+    grid-template-rows:repeat(12, minmax(30px, 1fr));
+    min-height:0;
+  }
+
+  .rosterSlotRow{
+    display:grid;
+    grid-template-columns:34px 40px 1fr;
+    gap:8px;
+    align-items:center;
+    padding:4px 10px;
+    border-bottom:1px solid #1f1f1f;
+  }
+
+  .rosterSlotRow:last-child{
+    border-bottom:0;
+  }
+
+  .rosterSlotRow input[type="checkbox"]{
+    width:18px;
+    height:18px;
+    justify-self:center;
+    margin:0;
+  }
+
+  .rosterRole{
     display:flex;
     align-items:center;
     justify-content:center;
-    height:100%;
+    height:24px;
+    border-radius:8px;
+    background:#151515;
+    border:1px solid #292929;
+    font-size:12px;
+    font-weight:900;
   }
 
-  .rosterGuideLine.hi{
-    color:#fff;
-    font-weight:800;
-  }
-
-  .modalBody textarea{
-    flex:1;
+  .rosterNameInput{
     width:100%;
-    border-radius:12px;
-    border:1px solid #2a2a2a;
-    background:#0d0d0d;
-    color:#fff;
-    padding:12px;
-    font-size:13px;
-    line-height:1.25;
-    outline:none;
-    resize:none;
-    white-space:pre-wrap;
+    height:26px !important;
+    border-radius:8px !important;
   }
 
   .modalHint{
@@ -516,6 +530,16 @@
     }
     .tableWrap{
       height: calc(100vh - 110px);
+    }
+  }
+
+  @media (max-width: 760px){
+    .rosterSplit{
+      grid-template-columns:1fr;
+      overflow:auto;
+    }
+    .rosterTeamBox{
+      min-height:420px;
     }
   }
 </style>
@@ -567,16 +591,16 @@
         <th class="stat" data-col="2">Spiking Errors</th>
         <th class="stat" data-col="3">Ape Kills</th>
         <th class="stat" data-col="4">Ape Attempts</th>
-        <th class="stat" data-col="5">Kills</th>
-        <th class="stat" data-col="6">Attempts</th>
+        <th class="stat" data-col="5">Spike Kills</th>
+        <th class="stat" data-col="6">Spike Attempts</th>
 
-        <th class="stat" data-col="7">Kill</th>
-        <th class="stat" data-col="8">Soft</th>
+        <th class="stat" data-col="7">Kill Block</th>
+        <th class="stat" data-col="8">Soft Block</th>
         <th class="stat" data-col="9">One Touch</th>
 
         <th class="stat" data-col="10">Assists</th>
 
-        <th class="stat" data-col="11">Spike</th>
+        <th class="stat" data-col="11">Spike Receives</th>
         <th class="stat" data-col="12">BFs</th>
 
         <th class="stat" data-col="13">Aces</th>
@@ -595,71 +619,28 @@
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modalHeader">
       <div>
-        <div class="modalTitle">Paste roster</div>
-        <div class="modalSub">Team A then Team B, one username per line.</div>
+        <div class="modalTitle">Edit roster</div>
+        <div class="modalSub">Team A and Team B are separate. Paste multiline rosters into any name box to fill downward.</div>
       </div>
       <button id="closeRosterTop" class="modalCloseX">×</button>
     </div>
 
     <div class="modalBody">
-      <div class="rosterGrid">
-        <div class="rosterGuide" aria-hidden="true">
-          <span class="rosterGuideLine hi">C</span>
-          <span class="rosterGuideLine hi">V</span>
-          <span class="rosterGuideLine">3</span>
-          <span class="rosterGuideLine">4</span>
-          <span class="rosterGuideLine">5</span>
-          <span class="rosterGuideLine">6</span>
-          <span class="rosterGuideLine">7</span>
-          <span class="rosterGuideLine">8</span>
-          <span class="rosterGuideLine">9</span>
-          <span class="rosterGuideLine">10</span>
-          <span class="rosterGuideLine">11</span>
-          <span class="rosterGuideLine">12</span>
-          <span class="rosterGuideLine hi">C</span>
-          <span class="rosterGuideLine hi">V</span>
-          <span class="rosterGuideLine">3</span>
-          <span class="rosterGuideLine">4</span>
-          <span class="rosterGuideLine">5</span>
-          <span class="rosterGuideLine">6</span>
-          <span class="rosterGuideLine">7</span>
-          <span class="rosterGuideLine">8</span>
-          <span class="rosterGuideLine">9</span>
-          <span class="rosterGuideLine">10</span>
-          <span class="rosterGuideLine">11</span>
-          <span class="rosterGuideLine">12</span>
+      <div class="rosterSplit">
+        <div class="rosterTeamBox">
+          <div class="rosterTeamTitle">Team A</div>
+          <div id="teamARosterRows" class="rosterRows"></div>
         </div>
 
-        <textarea id="bulkRoster" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" placeholder="kyaannss
-lhovay
-crxypttss
-DarkzyHatesRoblox
-dmbrandons
-iaannss
-Josephh_john
-kurddss
-RainbowSwadow21
-risinggss
-sedrata
-Tripsillygoose
-agtheboss36
-m_ochii3
-BlackGokuGit
-braybraytoshay
-ch4dzs
-DiagonalFlame
-ilKiia
-jintsukuroi
-urugulus
-viatcseawing
-robloxavatar0
-D_ingK"></textarea>
+        <div class="rosterTeamBox">
+          <div class="rosterTeamTitle">Team B</div>
+          <div id="teamBRosterRows" class="rosterRows"></div>
+        </div>
       </div>
 
       <div class="modalHint">
-        Example roster layout shown above.<br><br>
-        Paste 12 lines = Team A only. Paste 24 lines = Team A + Team B.<br>
-        <strong>Empty lines will be preserved as empty player slots.</strong>
+        Each slot has its own checkbox. Checked = show on grid. Unchecked = hide from grid.<br>
+        Hidden players keep their stored names/stats, but the visible grid stretches to fill the available space.
       </div>
     </div>
 
@@ -683,7 +664,7 @@ D_ingK"></textarea>
     <div class="modalBody" style="flex:0 0 auto;">
       <div class="resetExplain">
         <strong>Reset stats</strong>
-        Keeps team names, usernames, colours, and remains undoable.<br>
+        Keeps team names, usernames, colours, visible/hidden roster slots, and remains undoable.<br>
         Choose this once you've finished stat-tracking a set.
       </div>
 
@@ -706,25 +687,28 @@ D_ingK"></textarea>
 
 <script>
 const STATS = [
-  "Spiking Errors","Ape Kills","Ape Attempts","Kills","Attempts",
-  "Kill","Soft","One Touch",
+  "Spiking Errors","Ape Kills","Ape Attempts","Spike Kills","Spike Attempts",
+  "Kill Block","Soft Block","One Touch",
   "Assists",
-  "Spike","BFs",
+  "Spike Receives","BFs",
   "Aces",
   "Misc. Errors","Set. Errors","Serve Errors"
 ];
 
 const ROWS_PER_TEAM = 12;
 const TOTAL_ROWS = ROWS_PER_TEAM * 2;
-const ROLE_LABELS = ["C","V","3","4","5","6","7","8","9","10","11","12"];
+const ROLE_LABELS = ["C","VC","3","4","5","6","7","8","9","10","11","12"];
 
 const SAME_TEAM_POINT_STATS = new Set([1,3,5,11]);
 const OTHER_TEAM_POINT_STATS = new Set([0,12,13,14]);
 
 const DEFAULT_TEAM_COLOR = "#c8c8c8";
+const STORAGE_KEY = "rvl12_stat_grid_state";
+const OLD_STORAGE_KEY = "v42_state";
 
 const DEFAULT_STATE = () => ({
   names: Array.from({length: TOTAL_ROWS}, () => ""),
+  visible: Array.from({length: TOTAL_ROWS}, () => true),
   values: Array.from({length: TOTAL_ROWS}, () => Array.from({length: STATS.length}, () => 0)),
   teamAName: "",
   teamBName: "",
@@ -762,6 +746,34 @@ function cloneDeep(obj){
 function cellId(r,c){ return `cell_${r}_${c}`; }
 function nameId(r){ return `name_${r}`; }
 function sepId(team){ return team === "A" ? "sep_team_a" : "sep_team_b"; }
+function rosterInputId(r){ return `roster_input_${r}`; }
+function rosterCheckId(r){ return `roster_check_${r}`; }
+
+function normalizeState(){
+  if(!Array.isArray(state.names) || state.names.length !== TOTAL_ROWS){
+    state.names = Array.from({length: TOTAL_ROWS}, (_, i) => state.names?.[i] || "");
+  }
+
+  if(!Array.isArray(state.visible) || state.visible.length !== TOTAL_ROWS){
+    state.visible = Array.from({length: TOTAL_ROWS}, (_, i) => state.visible?.[i] !== false);
+  }
+
+  if(!Array.isArray(state.values) || state.values.length !== TOTAL_ROWS){
+    state.values = Array.from({length: TOTAL_ROWS}, () => Array.from({length: STATS.length}, () => 0));
+  }
+
+  for(let r=0;r<TOTAL_ROWS;r++){
+    if(!Array.isArray(state.values[r])) state.values[r] = [];
+    state.values[r] = Array.from({length: STATS.length}, (_, c) => Number(state.values[r][c] || 0));
+  }
+
+  state.teamAColor = state.teamAColor || DEFAULT_TEAM_COLOR;
+  state.teamBColor = state.teamBColor || DEFAULT_TEAM_COLOR;
+  state.scoreA = Number(state.scoreA || 0);
+  state.scoreB = Number(state.scoreB || 0);
+  state.scoreFlipped = !!state.scoreFlipped;
+  state.controlsHidden = !!state.controlsHidden;
+}
 
 function clearScoreFlash(){
   document.getElementById("scoreLeft").classList.remove("flash");
@@ -822,17 +834,18 @@ function updateTopVisibility(){
 
 function saveToLocal(){
   try{
-    localStorage.setItem("v42_state", JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }catch(e){}
 }
 
 function loadFromLocal(){
   try{
-    const raw = localStorage.getItem("v42_state");
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY);
     if(!raw) return;
     const parsed = JSON.parse(raw);
     if(parsed && parsed.names && parsed.values){
       Object.assign(state, DEFAULT_STATE(), parsed);
+      normalizeState();
     }
   }catch(e){}
 }
@@ -946,15 +959,18 @@ function flashElement(el, hold = 35){
   setTimeout(() => endFlashToBase(el), hold);
 }
 
-function animateNameUpdate(el, newText, delay = 0){
-  setTimeout(() => {
-    if(!el) return;
-    startInstantFlash(el);
-    setTimeout(() => {
-      el.textContent = newText;
-      endFlashToBase(el);
-    }, 40);
-  }, delay);
+function updateDynamicRowHeight(){
+  const wrap = document.querySelector(".tableWrap");
+  const header = document.querySelector("thead");
+  if(!wrap || !header) return;
+
+  const visibleRows = state.visible.filter(Boolean).length || 1;
+  const headerH = header.offsetHeight || 34;
+  const sepH = 36;
+  const available = Math.max(0, wrap.clientHeight - headerH - sepH);
+  const nextRowH = Math.max(26, Math.floor(available / visibleRows));
+
+  document.documentElement.style.setProperty("--rowH", `${nextRowH}px`);
 }
 
 function applyAction(action, direction){
@@ -999,10 +1015,14 @@ function render(){
   tbody.innerHTML = "";
 
   tbody.appendChild(makeSepRow("A", state.teamAName, state.teamAColor));
-  for(let r=0; r<ROWS_PER_TEAM; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
+  for(let r=0; r<ROWS_PER_TEAM; r++){
+    if(state.visible[r]) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
+  }
 
   tbody.appendChild(makeSepRow("B", state.teamBName, state.teamBColor));
-  for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
+  for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++){
+    if(state.visible[r]) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
+  }
 
   document.getElementById("teamAName").value = state.teamAName;
   document.getElementById("teamBName").value = state.teamBName;
@@ -1010,6 +1030,7 @@ function render(){
   document.getElementById("teamBColor").value = state.teamBColor;
   updateScoreDisplay();
   updateTopVisibility();
+  updateDynamicRowHeight();
 
   if(state.lastTouched) setLastTouched(state.lastTouched);
 }
@@ -1156,6 +1177,154 @@ function makePlayerRow(r, roleLabel){
   return tr;
 }
 
+function buildRosterEditor(){
+  const teamABox = document.getElementById("teamARosterRows");
+  const teamBBox = document.getElementById("teamBRosterRows");
+  teamABox.innerHTML = "";
+  teamBBox.innerHTML = "";
+
+  for(let r=0;r<TOTAL_ROWS;r++){
+    const row = document.createElement("div");
+    row.className = "rosterSlotRow";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = rosterCheckId(r);
+    checkbox.dataset.r = String(r);
+    checkbox.title = "Show this slot on the grid";
+
+    const role = document.createElement("div");
+    role.className = "rosterRole";
+    role.textContent = ROLE_LABELS[r % ROWS_PER_TEAM];
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "rosterNameInput";
+    input.id = rosterInputId(r);
+    input.dataset.r = String(r);
+    input.spellcheck = false;
+    input.autocomplete = "off";
+    input.autocapitalize = "off";
+    input.placeholder = "Player";
+
+    input.addEventListener("paste", (e)=>{
+      const text = e.clipboardData?.getData("text") || "";
+      if(text.includes("\n") || text.includes("\r")){
+        e.preventDefault();
+        spreadRosterPaste(r, text);
+      }
+    });
+
+    row.appendChild(checkbox);
+    row.appendChild(role);
+    row.appendChild(input);
+
+    if(isTeamARow(r)) teamABox.appendChild(row);
+    else teamBBox.appendChild(row);
+  }
+}
+
+function populateRosterEditor(){
+  for(let r=0;r<TOTAL_ROWS;r++){
+    const input = document.getElementById(rosterInputId(r));
+    const checkbox = document.getElementById(rosterCheckId(r));
+    if(input) input.value = state.names[r] || "";
+    if(checkbox) checkbox.checked = state.visible[r] !== false;
+  }
+}
+
+function spreadRosterPaste(startIndex, text){
+  const lines = splitPreserveEmptyLines(text);
+  const teamStart = isTeamARow(startIndex) ? 0 : ROWS_PER_TEAM;
+  const teamEnd = teamStart + ROWS_PER_TEAM;
+
+  for(let i=0;i<lines.length;i++){
+    const r = startIndex + i;
+    if(r >= teamEnd) break;
+    const input = document.getElementById(rosterInputId(r));
+    if(input) input.value = lines[i];
+  }
+}
+
+function clearElementForReset(el){
+  if(!el || el.tagName === "TH") return;
+
+  if(el.id === sepId("A") || el.id === sepId("B")){
+    el.textContent = "";
+    el.style.background = DEFAULT_TEAM_COLOR;
+    el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
+    return;
+  }
+
+  if(el.classList.contains("player") || el.classList.contains("stat")){
+    el.textContent = "";
+  }
+}
+
+function getDiagonalResetElements(){
+  const items = [];
+  const headerCells = Array.from(document.querySelectorAll("thead th"));
+
+  headerCells.forEach((el, col) => {
+    items.push({el, row:0, col});
+  });
+
+  let rowIndex = 1;
+  const bodyRows = Array.from(document.querySelectorAll("tbody tr"));
+
+  bodyRows.forEach(row => {
+    const cells = Array.from(row.children);
+
+    if(row.classList.contains("sep")){
+      cells.forEach(el => items.push({el, row:rowIndex, col:0}));
+      rowIndex += 1;
+      return;
+    }
+
+    cells.forEach((el, fallbackCol) => {
+      const col = Number(el.dataset.col ?? fallbackCol);
+      items.push({el, row:rowIndex, col});
+    });
+
+    rowIndex += 1;
+  });
+
+  return items;
+}
+
+function runDiagonalResetBoardAnimation(){
+  clearLastTouchedImmediately();
+  clearScoreFlash();
+
+  const items = getDiagonalResetElements();
+  let maxDelay = 0;
+
+  items.forEach(({el, row, col}) => {
+    const delay = (row + col) * 18;
+    maxDelay = Math.max(maxDelay, delay);
+
+    setTimeout(() => {
+      startInstantFlash(el);
+    }, delay);
+
+    setTimeout(() => {
+      clearElementForReset(el);
+      endFlashToBase(el);
+    }, delay + 48);
+  });
+
+  setTimeout(() => {
+    Object.assign(state, DEFAULT_STATE());
+    undoStack.length = 0;
+    redoStack.length = 0;
+    clearScoreFlash();
+    updateUndoRedoButtons();
+    saveToLocal();
+    populateRosterEditor();
+    render();
+  }, maxDelay + 460);
+}
+
 document.getElementById("undoBtn").addEventListener("click", ()=>{
   const action = undoStack.pop();
   if(!action) return;
@@ -1214,9 +1383,13 @@ function setMenuActive(btn, active){
 }
 
 function openRoster(){
+  populateRosterEditor();
   overlay.style.display = "flex";
   setMenuActive(document.getElementById("rosterBtn"), true);
-  setTimeout(() => bulkRoster.focus(), 50);
+  setTimeout(() => {
+    const first = document.getElementById(rosterInputId(0));
+    if(first) first.focus();
+  }, 50);
 }
 
 function closeRoster(){
@@ -1250,7 +1423,7 @@ document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
   const changedIds = [];
   for(let r=0;r<TOTAL_ROWS;r++){
     for(let c=0;c<STATS.length;c++){
-      if(state.values[r][c] !== 0){
+      if(state.values[r][c] !== 0 && state.visible[r] !== false){
         changedIds.push(cellId(r,c));
       }
     }
@@ -1285,76 +1458,24 @@ document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
       });
     }, 40);
   } else {
+    for(let r=0;r<TOTAL_ROWS;r++){
+      for(let c=0;c<STATS.length;c++){
+        state.values[r][c] = 0;
+      }
+    }
     state.scoreA = 0;
     state.scoreB = 0;
     updateScoreDisplay();
     setLastTouched(null);
     saveToLocal();
     updateUndoRedoButtons();
+    render();
   }
 });
 
 document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
   closeResetModal();
-
-  const headerCells = Array.from(document.querySelectorAll("thead th"));
-  const bodyRows = Array.from(document.querySelectorAll("tbody tr"));
-  const ordered = [];
-
-  headerCells.forEach(cell => ordered.push(cell));
-  bodyRows.forEach(row => {
-    Array.from(row.children).forEach(cell => ordered.push(cell));
-  });
-
-  ordered.forEach((el, i) => {
-    setTimeout(() => {
-      startInstantFlash(el);
-    }, i * 2);
-  });
-
-  const baseDelay = ordered.length * 2 + 40;
-
-  setTimeout(() => {
-    ordered.forEach(el => {
-      if(el.tagName === "TH") return;
-
-      if(el.id === sepId("A")){
-        el.textContent = "";
-        el.style.background = DEFAULT_TEAM_COLOR;
-        el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
-        return;
-      }
-
-      if(el.id === sepId("B")){
-        el.textContent = "";
-        el.style.background = DEFAULT_TEAM_COLOR;
-        el.style.color = getContrastText(DEFAULT_TEAM_COLOR);
-        return;
-      }
-
-      if(el.classList.contains("player")){
-        el.textContent = "";
-        return;
-      }
-
-      if(el.classList.contains("stat")){
-        el.textContent = "";
-      }
-    });
-
-    ordered.forEach(el => endFlashToBase(el));
-
-    Object.assign(state, DEFAULT_STATE());
-    undoStack.length = 0;
-    redoStack.length = 0;
-    clearScoreFlash();
-    updateUndoRedoButtons();
-    saveToLocal();
-
-    setTimeout(() => {
-      render();
-    }, 390);
-  }, baseDelay);
+  runDiagonalResetBoardAnimation();
 });
 
 document.getElementById("exportBtn").addEventListener("click", ()=>{
@@ -1363,11 +1484,13 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
 
   rows.push([`== ${state.teamAName || ""} ==`, "", ...Array(STATS.length).fill("")]);
   for(let r=0;r<ROWS_PER_TEAM;r++){
+    if(state.visible[r] === false) continue;
     rows.push([ROLE_LABELS[r], state.names[r] || "", ...state.values[r].map(v => v ? String(v) : "")]);
   }
 
   rows.push([`== ${state.teamBName || ""} ==`, "", ...Array(STATS.length).fill("")]);
   for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
+    if(state.visible[r] === false) continue;
     rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v => v ? String(v) : "")]);
   }
 
@@ -1381,7 +1504,7 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `v42_stats_${Date.now()}.csv`;
+  a.download = `rvl12_stats_${Date.now()}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -1390,13 +1513,15 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
 
 document.getElementById("teamAName").addEventListener("input", (e)=>{
   state.teamAName = e.target.value;
-  render();
+  const sep = document.getElementById(sepId("A"));
+  if(sep) sep.textContent = state.teamAName;
   saveToLocal();
 });
 
 document.getElementById("teamBName").addEventListener("input", (e)=>{
   state.teamBName = e.target.value;
-  render();
+  const sep = document.getElementById(sepId("B"));
+  if(sep) sep.textContent = state.teamBName;
   saveToLocal();
 });
 
@@ -1416,13 +1541,21 @@ document.getElementById("teamBName").addEventListener("keydown", (e)=>{
 
 document.getElementById("teamAColor").addEventListener("input", (e)=>{
   state.teamAColor = e.target.value;
-  render();
+  const sep = document.getElementById(sepId("A"));
+  if(sep){
+    sep.style.background = state.teamAColor;
+    sep.style.color = getContrastText(state.teamAColor);
+  }
   saveToLocal();
 });
 
 document.getElementById("teamBColor").addEventListener("input", (e)=>{
   state.teamBColor = e.target.value;
-  render();
+  const sep = document.getElementById(sepId("B"));
+  if(sep){
+    sep.style.background = state.teamBColor;
+    sep.style.color = getContrastText(state.teamBColor);
+  }
   saveToLocal();
 });
 
@@ -1430,40 +1563,45 @@ const rosterBtn = document.getElementById("rosterBtn");
 const closeTop = document.getElementById("closeRosterTop");
 const closeBottom = document.getElementById("closeRosterBottom");
 const applyRosterBtn = document.getElementById("applyRosterBtn");
-const bulkRoster = document.getElementById("bulkRoster");
 
 rosterBtn.addEventListener("click", openRoster);
 closeTop.addEventListener("click", closeRoster);
 closeBottom.addEventListener("click", closeRoster);
 
 applyRosterBtn.addEventListener("click", ()=>{
-  const lines = splitPreserveEmptyLines(bulkRoster.value);
+  const changedNames = [];
+  let visibilityChanged = false;
 
-  if(lines.length === 1 && lines[0] === ""){
-    closeRoster();
-    return;
-  }
+  for(let r=0;r<TOTAL_ROWS;r++){
+    const input = document.getElementById(rosterInputId(r));
+    const checkbox = document.getElementById(rosterCheckId(r));
+    const nextName = input ? input.value : "";
+    const nextVisible = checkbox ? checkbox.checked : true;
 
-  const capped = lines.slice(0, TOTAL_ROWS);
-  const updates = [];
+    if(nextName !== (state.names[r] ?? "")){
+      changedNames.push(r);
+      state.names[r] = nextName;
+    }
 
-  for(let i=0;i<capped.length;i++){
-    const nextName = capped[i];
-    const currentName = state.names[i] ?? "";
-    if(nextName !== currentName){
-      updates.push({ index:i, value:nextName });
-      state.names[i] = nextName;
+    if(nextVisible !== (state.visible[r] !== false)){
+      visibilityChanged = true;
+      state.visible[r] = nextVisible;
     }
   }
 
   saveToLocal();
   closeRoster();
+  render();
 
-  updates.forEach((item, seqIndex) => {
-    const el = document.getElementById(nameId(item.index));
-    if(!el) return;
-    animateNameUpdate(el, item.value, seqIndex * 34);
+  changedNames.forEach((r, seqIndex) => {
+    if(state.visible[r] === false) return;
+    const el = document.getElementById(nameId(r));
+    setTimeout(() => flashElement(el), seqIndex * 34);
   });
+
+  if(visibilityChanged){
+    updateDynamicRowHeight();
+  }
 });
 
 document.addEventListener("keydown", (e)=>{
@@ -1471,7 +1609,12 @@ document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && resetOverlay.style.display === "flex") closeResetModal();
 });
 
+window.addEventListener("resize", updateDynamicRowHeight);
+
 loadFromLocal();
+normalizeState();
+buildRosterEditor();
+populateRosterEditor();
 render();
 updateUndoRedoButtons();
 </script>
