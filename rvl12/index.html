@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>RVL 12 Stat Grid</title>
+<title>RVL 16 Stat Grid</title>
 
 <style>
   :root{
@@ -20,7 +20,7 @@
 
     --roleW: 40px;
     --playerW: clamp(124px, 13vw, 148px);
-    --miscW: 60px;
+    --visibleStatCount: 15;
 
     --fontH: 10px;
     --fontB: 12px;
@@ -37,10 +37,13 @@
     --danger:#d83a3a;
 
     --scoreFlash:#00ff66;
+    --scoreUndoFlash:#ff7777;
     --rosterApply:#1f9d4c;
 
     --rowDark:#111;
     --rowBlack:#000;
+    --dependencyBg:#665219;
+    --dependencyText:#fff3c2;
 
     --flashDuration: 360ms;
   }
@@ -85,6 +88,7 @@
     justify-content:flex-end;
     flex-wrap:nowrap;
     margin-left:auto;
+    position:relative;
   }
 
   .hidden-ui{
@@ -133,6 +137,17 @@
     accent-color:var(--rosterApply);
   }
 
+  select{
+    height:28px;
+    border-radius:8px;
+    border:1px solid #2a2a2a;
+    background:#0d0d0d;
+    color:#fff;
+    padding:0 8px;
+    font-size:12px;
+    outline:none;
+  }
+
   button{
     height:30px;
     border-radius:10px;
@@ -162,10 +177,42 @@
     font-weight:800;
   }
 
-  .menuBtn-active{
+  .menuBtn-active,
+  .settingsOpen{
     background:#fff !important;
     color:#000 !important;
     border-color:transparent !important;
+  }
+
+  .settingsWrap{
+    position:relative;
+  }
+
+  .settingsMenu{
+    position:absolute;
+    right:0;
+    top:38px;
+    width:172px;
+    border:1px solid #2a2a2a;
+    background:#090909;
+    border-radius:14px;
+    padding:8px;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+    display:none;
+    z-index:100;
+  }
+
+  .settingsMenu.open{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .settingsMenu button{
+    width:100%;
+    justify-content:flex-start;
+    text-align:left;
+    border-radius:10px;
   }
 
   .scoreWrap{
@@ -200,6 +247,10 @@
 
   .scoreNum.flash{
     color:var(--scoreFlash);
+  }
+
+  .scoreNum.flash-red{
+    color:var(--scoreUndoFlash);
   }
 
   .scoreDash{
@@ -276,11 +327,12 @@
   }
 
   th.stat, td.stat{
-    width: calc((100% - var(--roleW) - var(--playerW) - var(--miscW)) / 14);
+    width: calc((100% - var(--roleW) - var(--playerW)) / var(--visibleStatCount));
   }
 
-  th.stat.misc, td.stat.misc{
-    width: var(--miscW);
+  th.group-start,
+  td.group-start{
+    border-left: var(--gridBoldW) solid var(--gridBold) !important;
   }
 
   tbody td{
@@ -317,6 +369,17 @@
     color:var(--lastText) !important;
   }
 
+  td.stat.dependency-missing{
+    background:var(--dependencyBg) !important;
+    color:var(--dependencyText) !important;
+    box-shadow:inset 0 0 0 1px rgba(255,235,140,.18);
+  }
+
+  td.stat.last-hit.dependency-missing{
+    background:var(--lastBg) !important;
+    color:var(--lastText) !important;
+  }
+
   .flash-white{
     background:#fff !important;
     color:#000 !important;
@@ -344,15 +407,6 @@
     outline:none;
   }
 
-  thead th[data-col="2"],  tbody td[data-col="2"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="3"],  tbody td[data-col="3"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="5"],  tbody td[data-col="5"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="7"],  tbody td[data-col="7"]  { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="10"], tbody td[data-col="10"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="11"], tbody td[data-col="11"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="13"], tbody td[data-col="13"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-  thead th[data-col="14"], tbody td[data-col="14"] { border-left: var(--gridBoldW) solid var(--gridBold) !important; }
-
   .modalOverlay{
     position:fixed;
     inset:0;
@@ -365,7 +419,7 @@
 
   .modal{
     width:min(1040px, 94vw);
-    height:min(660px, 88vh);
+    height:min(680px, 88vh);
     background:#0a0a0a;
     border:1px solid #2a2a2a;
     border-radius:16px;
@@ -442,49 +496,128 @@
     letter-spacing:.2px;
   }
 
-  .rosterRows{
+  .rosterPasteArea{
     flex:1;
-    display:grid;
-    grid-template-rows:repeat(12, minmax(30px, 1fr));
     min-height:0;
-  }
-
-  .rosterSlotRow{
     display:grid;
-    grid-template-columns:34px 40px 1fr;
+    grid-template-columns:74px 1fr;
     gap:8px;
+    padding:10px;
+  }
+
+  .rosterGuide{
+    display:grid;
+    grid-template-rows:repeat(16, 1fr);
+    gap:0;
+    min-height:0;
+    user-select:none;
+  }
+
+  .rosterGuideLine{
+    min-height:0;
+    display:grid;
+    grid-template-columns:24px 1fr;
     align-items:center;
-    padding:4px 10px;
-    border-bottom:1px solid #1f1f1f;
+    gap:6px;
+    font-size:12px;
+    font-weight:800;
+    color:#ddd;
   }
 
-  .rosterSlotRow:last-child{
-    border-bottom:0;
-  }
-
-  .rosterSlotRow input[type="checkbox"]{
-    width:18px;
-    height:18px;
+  .rosterGuideLine input{
+    width:17px;
+    height:17px;
     justify-self:center;
     margin:0;
   }
 
-  .rosterRole{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:24px;
-    border-radius:8px;
-    background:#151515;
-    border:1px solid #292929;
-    font-size:12px;
-    font-weight:900;
+  .rosterText{
+    width:100%;
+    height:100%;
+    min-height:0;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:#070707;
+    color:#fff;
+    padding:7px 10px;
+    font-size:13px;
+    line-height:1.72;
+    outline:none;
+    resize:none;
+    white-space:pre;
+    overflow:auto;
+    font-family:-apple-system, system-ui, Arial, sans-serif;
   }
 
-  .rosterNameInput{
-    width:100%;
-    height:26px !important;
-    border-radius:8px !important;
+  .editTopOptions{
+    display:flex;
+    gap:16px;
+    align-items:center;
+    flex-wrap:wrap;
+    padding:10px 12px;
+    border:1px solid #242424;
+    border-radius:12px;
+    background:#0d0d0d;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .editTopOptions label{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .columnEditor{
+    flex:1;
+    min-height:0;
+    border:1px solid #242424;
+    border-radius:12px;
+    background:#0d0d0d;
+    overflow:auto;
+  }
+
+  .columnRow{
+    display:grid;
+    grid-template-columns:34px 1fr 132px 34px 34px;
+    gap:8px;
+    align-items:center;
+    min-height:38px;
+    padding:5px 8px;
+    border-bottom:1px solid #1f1f1f;
+  }
+
+  .columnRow:last-child{
+    border-bottom:0;
+  }
+
+  .columnRow.extraStat .columnLabel::after{
+    content:"extra";
+    margin-left:8px;
+    font-size:10px;
+    opacity:.65;
+    font-weight:700;
+  }
+
+  .columnRow input[type="checkbox"]{
+    width:18px;
+    height:18px;
+    justify-self:center;
+  }
+
+  .columnLabel{
+    font-size:12px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .smallMoveBtn{
+    width:32px;
+    min-width:32px;
+    padding:0;
+    border-radius:8px;
   }
 
   .modalHint{
@@ -539,7 +672,11 @@
       overflow:auto;
     }
     .rosterTeamBox{
-      min-height:420px;
+      min-height:520px;
+    }
+    .columnRow{
+      grid-template-columns:30px 1fr 112px 32px 32px;
+      gap:6px;
     }
   }
 </style>
@@ -573,9 +710,15 @@
   </div>
 
   <div class="topRight">
-    <button id="rosterBtn">Roster</button>
-    <button id="resetBtn">Reset ≡</button>
-    <button id="exportBtn">Export CSV</button>
+    <div class="settingsWrap">
+      <button id="settingsBtn">Settings</button>
+      <div id="settingsMenu" class="settingsMenu">
+        <button id="editBoardMenuBtn">Edit Board</button>
+        <button id="rosterMenuBtn">Roster</button>
+        <button id="resetMenuBtn">Reset</button>
+        <button id="exportMenuBtn">Export CSV</button>
+      </div>
+    </div>
     <button id="undoBtn" disabled>←</button>
     <button id="redoBtn" disabled>→</button>
   </div>
@@ -583,34 +726,7 @@
 
 <div class="tableWrap">
   <table id="grid">
-    <thead>
-      <tr>
-        <th class="role" data-col="0">#</th>
-        <th class="player" data-col="1">Player</th>
-
-        <th class="stat" data-col="2">Spiking Errors</th>
-        <th class="stat" data-col="3">Ape Kills</th>
-        <th class="stat" data-col="4">Ape Attempts</th>
-        <th class="stat" data-col="5">Spike Kills</th>
-        <th class="stat" data-col="6">Spike Attempts</th>
-
-        <th class="stat" data-col="7">Kill Block</th>
-        <th class="stat" data-col="8">Soft Block</th>
-        <th class="stat" data-col="9">One Touch</th>
-
-        <th class="stat" data-col="10">Assists</th>
-
-        <th class="stat" data-col="11">Spike Receives</th>
-        <th class="stat" data-col="12">BFs</th>
-
-        <th class="stat" data-col="13">Aces</th>
-
-        <th class="stat" data-col="14">Misc. Errors</th>
-        <th class="stat" data-col="15">Set. Errors</th>
-
-        <th class="stat misc" data-col="16">Serve Errors</th>
-      </tr>
-    </thead>
+    <thead id="thead"></thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
@@ -620,7 +736,7 @@
     <div class="modalHeader">
       <div>
         <div class="modalTitle">Edit roster</div>
-        <div class="modalSub">Team A and Team B are separate. Paste multiline rosters into any name box to fill downward.</div>
+        <div class="modalSub">Paste each team into one big box. Checkmarks decide which slots show on the grid.</div>
       </div>
       <button id="closeRosterTop" class="modalCloseX">×</button>
     </div>
@@ -629,24 +745,60 @@
       <div class="rosterSplit">
         <div class="rosterTeamBox">
           <div class="rosterTeamTitle">Team A</div>
-          <div id="teamARosterRows" class="rosterRows"></div>
+          <div class="rosterPasteArea">
+            <div id="teamARosterGuide" class="rosterGuide"></div>
+            <textarea id="teamARosterText" class="rosterText" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
+          </div>
         </div>
 
         <div class="rosterTeamBox">
           <div class="rosterTeamTitle">Team B</div>
-          <div id="teamBRosterRows" class="rosterRows"></div>
+          <div class="rosterPasteArea">
+            <div id="teamBRosterGuide" class="rosterGuide"></div>
+            <textarea id="teamBRosterText" class="rosterText" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
+          </div>
         </div>
       </div>
 
       <div class="modalHint">
-        Each slot has its own checkbox. Checked = show on grid. Unchecked = hide from grid.<br>
-        Hidden players keep their stored names/stats, but the visible grid stretches to fill the available space.
+        Max 16 roster slots per team. By default, C through 14 are shown; 15 and 16 are stored but hidden until checked.<br>
+        Empty lines are preserved as empty player slots.
       </div>
     </div>
 
     <div class="modalFooter">
       <button id="closeRosterBottom">Close</button>
       <button id="applyRosterBtn" class="btnApply">Apply roster</button>
+    </div>
+  </div>
+</div>
+
+<div id="editBoardOverlay" class="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle">Edit board</div>
+        <div class="modalSub">Toggle scoreboard, show/hide columns, move columns, and set grey boundary groups.</div>
+      </div>
+      <button id="closeEditTop" class="modalCloseX">×</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="editTopOptions">
+        <label><input id="scoreVisibleEdit" type="checkbox" /> Show scoreboard</label>
+      </div>
+
+      <div id="columnEditor" class="columnEditor"></div>
+
+      <div class="modalHint">
+        Grey bold lines are controlled by group changes in the visible column order. Move a stat or change its group to change where those boundaries appear.<br>
+        Extra stats are unchecked by default: Receive Attempts, Aping Errors, Block Errors, Receive Errors, and Technical Fouls.
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button id="closeEditBottom">Close</button>
+      <button id="applyEditBoardBtn" class="btnApply">Apply board</button>
     </div>
   </div>
 </div>
@@ -664,7 +816,7 @@
     <div class="modalBody" style="flex:0 0 auto;">
       <div class="resetExplain">
         <strong>Reset stats</strong>
-        Keeps team names, usernames, colours, visible/hidden roster slots, and remains undoable.<br>
+        Keeps team names, usernames, colours, visible/hidden roster slots, board settings, and remains undoable.<br>
         Choose this once you've finished stat-tracking a set.
       </div>
 
@@ -686,30 +838,54 @@
 </div>
 
 <script>
-const STATS = [
-  "Spiking Errors","Ape Kills","Ape Attempts","Spike Kills","Spike Attempts",
-  "Kill Block","Soft Block","One Touch",
-  "Assists",
-  "Spike Receives","BFs",
-  "Aces",
-  "Misc. Errors","Set. Errors","Serve Errors"
+const STAT_DEFS = [
+  {id:"spikingErrors", label:"Spiking Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
+  {id:"apeKills", label:"Ape Kills", group:"Apes", extra:false, defaultVisible:true, point:"same"},
+  {id:"apeAttempts", label:"Ape Attempts", group:"Apes", extra:false, defaultVisible:true, point:null},
+  {id:"spikeKills", label:"Spike Kills", group:"Spikes", extra:false, defaultVisible:true, point:"same"},
+  {id:"spikeAttempts", label:"Spike Attempts", group:"Spikes", extra:false, defaultVisible:true, point:null},
+  {id:"killBlock", label:"Kill Block", group:"Blocks", extra:false, defaultVisible:true, point:"same"},
+  {id:"softBlock", label:"Soft Block", group:"Blocks", extra:false, defaultVisible:true, point:null},
+  {id:"oneTouch", label:"One Touch", group:"Blocks", extra:false, defaultVisible:true, point:null},
+  {id:"assists", label:"Assists", group:"Sets", extra:false, defaultVisible:true, point:null},
+  {id:"spikeReceives", label:"Spike Receives", group:"Receives", extra:false, defaultVisible:true, point:null},
+  {id:"bfs", label:"BFs", group:"Blocks", extra:false, defaultVisible:true, point:null},
+  {id:"aces", label:"Aces", group:"Serves", extra:false, defaultVisible:true, point:"same"},
+  {id:"miscErrors", label:"Misc. Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
+  {id:"setErrors", label:"Set. Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
+  {id:"serveErrors", label:"Serve Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
+
+  {id:"receiveAttempts", label:"Receive Attempts", group:"Receives", extra:true, defaultVisible:false, point:null},
+  {id:"apingErrors", label:"Aping Errors", group:"Errors", extra:true, defaultVisible:false, point:"other"},
+  {id:"blockErrors", label:"Block Errors", group:"Errors", extra:true, defaultVisible:false, point:"other"},
+  {id:"receiveErrors", label:"Receive Errors", group:"Errors", extra:true, defaultVisible:false, point:"other"},
+  {id:"technicalFouls", label:"Technical Fouls", group:"Errors", extra:true, defaultVisible:false, point:"other"}
 ];
 
-const ROWS_PER_TEAM = 12;
-const TOTAL_ROWS = ROWS_PER_TEAM * 2;
-const ROLE_LABELS = ["C","VC","3","4","5","6","7","8","9","10","11","12"];
+const STAT_BY_ID = Object.fromEntries(STAT_DEFS.map(s => [s.id, s]));
+const DEFAULT_STAT_ORDER = STAT_DEFS.map(s => s.id);
+const GROUPS = ["Apes","Spikes","Blocks","Sets","Receives","Serves","Errors","Other"];
 
-const SAME_TEAM_POINT_STATS = new Set([1,3,5,11]);
-const OTHER_TEAM_POINT_STATS = new Set([0,12,13,14]);
+const OLD_STAT_IDS = [
+  "spikingErrors","apeKills","apeAttempts","spikeKills","spikeAttempts",
+  "killBlock","softBlock","oneTouch","assists","spikeReceives","bfs",
+  "aces","miscErrors","setErrors","serveErrors"
+];
+
+const ROWS_PER_TEAM = 16;
+const DEFAULT_VISIBLE_PER_TEAM = 14;
+const TOTAL_ROWS = ROWS_PER_TEAM * 2;
+const ROLE_LABELS = ["C","VC","3","4","5","6","7","8","9","10","11","12","13","14","15","16"];
 
 const DEFAULT_TEAM_COLOR = "#c8c8c8";
-const STORAGE_KEY = "rvl12_stat_grid_state";
-const OLD_STORAGE_KEY = "v42_state";
+const STORAGE_KEY = "rvl16_stat_grid_state";
+const OLD_STORAGE_KEY = "rvl12_stat_grid_state";
+const OLDER_STORAGE_KEY = "v42_state";
 
 const DEFAULT_STATE = () => ({
   names: Array.from({length: TOTAL_ROWS}, () => ""),
-  visible: Array.from({length: TOTAL_ROWS}, () => true),
-  values: Array.from({length: TOTAL_ROWS}, () => Array.from({length: STATS.length}, () => 0)),
+  visible: Array.from({length: TOTAL_ROWS}, (_, i) => (i % ROWS_PER_TEAM) < DEFAULT_VISIBLE_PER_TEAM),
+  values: Array.from({length: TOTAL_ROWS}, () => makeEmptyValueRow()),
   teamAName: "",
   teamBName: "",
   teamAColor: DEFAULT_TEAM_COLOR,
@@ -717,75 +893,194 @@ const DEFAULT_STATE = () => ({
   scoreA: 0,
   scoreB: 0,
   scoreFlipped: false,
+  scoreVisible: true,
   lastTouched: null,
-  controlsHidden: false
+  controlsHidden: false,
+  statOrder: DEFAULT_STAT_ORDER.slice(),
+  statVisible: Object.fromEntries(STAT_DEFS.map(s => [s.id, !!s.defaultVisible])),
+  statGroups: Object.fromEntries(STAT_DEFS.map(s => [s.id, s.group]))
 });
+
+function makeEmptyValueRow(){
+  return Object.fromEntries(STAT_DEFS.map(s => [s.id, 0]));
+}
 
 const state = DEFAULT_STATE();
 const undoStack = [];
 const redoStack = [];
 
 let scoreFlashTimer = null;
+let editDraftOrder = [];
 
 function isTeamARow(r){ return r < ROWS_PER_TEAM; }
-
-function scoreSideForEvent(r,c){
-  if(SAME_TEAM_POINT_STATS.has(c)){
-    return isTeamARow(r) ? "A" : "B";
-  }
-  if(OTHER_TEAM_POINT_STATS.has(c)){
-    return isTeamARow(r) ? "B" : "A";
-  }
-  return null;
-}
+function teamOfRow(r){ return isTeamARow(r) ? "A" : "B"; }
+function enemyTeam(team){ return team === "A" ? "B" : "A"; }
+function teamStart(team){ return team === "A" ? 0 : ROWS_PER_TEAM; }
+function teamEnd(team){ return teamStart(team) + ROWS_PER_TEAM; }
+function cellId(r,id){ return `cell_${r}_${id}`; }
+function nameId(r){ return `name_${r}`; }
+function sepId(team){ return team === "A" ? "sep_team_a" : "sep_team_b"; }
+function rosterCheckId(r){ return `roster_check_${r}`; }
+function statLabel(id){ return STAT_BY_ID[id]?.label || id; }
+function statGroup(id){ return state.statGroups?.[id] || STAT_BY_ID[id]?.group || "Other"; }
+function isStatVisible(id){ return state.statVisible?.[id] !== false && !!STAT_BY_ID[id]; }
+function visibleStatIds(){ return state.statOrder.filter(id => isStatVisible(id)); }
 
 function cloneDeep(obj){
   return JSON.parse(JSON.stringify(obj));
 }
 
-function cellId(r,c){ return `cell_${r}_${c}`; }
-function nameId(r){ return `name_${r}`; }
-function sepId(team){ return team === "A" ? "sep_team_a" : "sep_team_b"; }
-function rosterInputId(r){ return `roster_input_${r}`; }
-function rosterCheckId(r){ return `roster_check_${r}`; }
+function migrateLegacy24(parsed){
+  if(!parsed || !Array.isArray(parsed.names) || parsed.names.length !== 24) return parsed;
+
+  const migrated = DEFAULT_STATE();
+  migrated.teamAName = parsed.teamAName || "";
+  migrated.teamBName = parsed.teamBName || "";
+  migrated.teamAColor = parsed.teamAColor || DEFAULT_TEAM_COLOR;
+  migrated.teamBColor = parsed.teamBColor || DEFAULT_TEAM_COLOR;
+  migrated.scoreA = Number(parsed.scoreA || 0);
+  migrated.scoreB = Number(parsed.scoreB || 0);
+  migrated.scoreFlipped = !!parsed.scoreFlipped;
+  migrated.controlsHidden = !!parsed.controlsHidden;
+  migrated.scoreVisible = parsed.scoreVisible !== false;
+
+  for(let i=0;i<12;i++){
+    migrated.names[i] = parsed.names[i] || "";
+    migrated.visible[i] = parsed.visible?.[i] !== false;
+    migrated.names[ROWS_PER_TEAM + i] = parsed.names[12 + i] || "";
+    migrated.visible[ROWS_PER_TEAM + i] = parsed.visible?.[12 + i] !== false;
+
+    if(Array.isArray(parsed.values?.[i])){
+      OLD_STAT_IDS.forEach((id, c) => migrated.values[i][id] = Number(parsed.values[i][c] || 0));
+    }else if(parsed.values?.[i] && typeof parsed.values[i] === "object"){
+      STAT_DEFS.forEach(s => migrated.values[i][s.id] = Number(parsed.values[i][s.id] || 0));
+    }
+
+    if(Array.isArray(parsed.values?.[12 + i])){
+      OLD_STAT_IDS.forEach((id, c) => migrated.values[ROWS_PER_TEAM + i][id] = Number(parsed.values[12 + i][c] || 0));
+    }else if(parsed.values?.[12 + i] && typeof parsed.values[12 + i] === "object"){
+      STAT_DEFS.forEach(s => migrated.values[ROWS_PER_TEAM + i][s.id] = Number(parsed.values[12 + i][s.id] || 0));
+    }
+  }
+
+  return migrated;
+}
 
 function normalizeState(){
+  const defaults = DEFAULT_STATE();
+
   if(!Array.isArray(state.names) || state.names.length !== TOTAL_ROWS){
     state.names = Array.from({length: TOTAL_ROWS}, (_, i) => state.names?.[i] || "");
   }
 
   if(!Array.isArray(state.visible) || state.visible.length !== TOTAL_ROWS){
-    state.visible = Array.from({length: TOTAL_ROWS}, (_, i) => state.visible?.[i] !== false);
+    state.visible = Array.from({length: TOTAL_ROWS}, (_, i) => state.visible?.[i] ?? defaults.visible[i]);
+  }else{
+    state.visible = state.visible.map((v, i) => v ?? defaults.visible[i]);
   }
 
   if(!Array.isArray(state.values) || state.values.length !== TOTAL_ROWS){
-    state.values = Array.from({length: TOTAL_ROWS}, () => Array.from({length: STATS.length}, () => 0));
+    state.values = Array.from({length: TOTAL_ROWS}, () => makeEmptyValueRow());
+  }else{
+    state.values = Array.from({length: TOTAL_ROWS}, (_, r) => {
+      const existing = state.values[r];
+      const next = makeEmptyValueRow();
+
+      if(Array.isArray(existing)){
+        OLD_STAT_IDS.forEach((id, c) => next[id] = Number(existing[c] || 0));
+      }else if(existing && typeof existing === "object"){
+        STAT_DEFS.forEach(s => next[s.id] = Number(existing[s.id] || 0));
+      }
+
+      return next;
+    });
   }
 
-  for(let r=0;r<TOTAL_ROWS;r++){
-    if(!Array.isArray(state.values[r])) state.values[r] = [];
-    state.values[r] = Array.from({length: STATS.length}, (_, c) => Number(state.values[r][c] || 0));
-  }
-
+  state.teamAName = state.teamAName || "";
+  state.teamBName = state.teamBName || "";
   state.teamAColor = state.teamAColor || DEFAULT_TEAM_COLOR;
   state.teamBColor = state.teamBColor || DEFAULT_TEAM_COLOR;
   state.scoreA = Number(state.scoreA || 0);
   state.scoreB = Number(state.scoreB || 0);
   state.scoreFlipped = !!state.scoreFlipped;
+  state.scoreVisible = state.scoreVisible !== false;
   state.controlsHidden = !!state.controlsHidden;
+
+  const knownIds = new Set(STAT_DEFS.map(s => s.id));
+  state.statOrder = Array.isArray(state.statOrder) ? state.statOrder.filter(id => knownIds.has(id)) : [];
+  DEFAULT_STAT_ORDER.forEach(id => {
+    if(!state.statOrder.includes(id)) state.statOrder.push(id);
+  });
+
+  state.statVisible = state.statVisible && typeof state.statVisible === "object" ? state.statVisible : {};
+  STAT_DEFS.forEach(s => {
+    if(typeof state.statVisible[s.id] !== "boolean") state.statVisible[s.id] = !!s.defaultVisible;
+  });
+
+  state.statGroups = state.statGroups && typeof state.statGroups === "object" ? state.statGroups : {};
+  STAT_DEFS.forEach(s => {
+    if(!GROUPS.includes(state.statGroups[s.id])) state.statGroups[s.id] = s.group;
+  });
+
+  if(state.lastTouched && !STAT_BY_ID[state.lastTouched.id]) state.lastTouched = null;
+}
+
+function saveToLocal(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){}
+}
+
+function loadFromLocal(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY) || localStorage.getItem(OLDER_STORAGE_KEY);
+    if(!raw) return;
+    const parsed = migrateLegacy24(JSON.parse(raw));
+    if(parsed && parsed.names && parsed.values){
+      Object.assign(state, DEFAULT_STATE(), parsed);
+      normalizeState();
+    }
+  }catch(e){}
+}
+
+function getValue(r,id){
+  if(!state.values[r]) state.values[r] = makeEmptyValueRow();
+  return Number(state.values[r][id] || 0);
+}
+
+function setValue(r,id,value){
+  if(!state.values[r]) state.values[r] = makeEmptyValueRow();
+  state.values[r][id] = Math.max(0, Number(value || 0));
+}
+
+function scoreSideForEvent(r,id){
+  const point = STAT_BY_ID[id]?.point;
+  if(!point) return null;
+
+  if(point === "same"){
+    return isTeamARow(r) ? "A" : "B";
+  }
+
+  if(point === "other"){
+    return isTeamARow(r) ? "B" : "A";
+  }
+
+  return null;
 }
 
 function clearScoreFlash(){
-  document.getElementById("scoreLeft").classList.remove("flash");
-  document.getElementById("scoreRight").classList.remove("flash");
+  document.getElementById("scoreLeft").classList.remove("flash", "flash-red");
+  document.getElementById("scoreRight").classList.remove("flash", "flash-red");
   if(scoreFlashTimer){
     clearTimeout(scoreFlashTimer);
     scoreFlashTimer = null;
   }
 }
 
-function flashScoringSide(side){
+function flashScoringSide(side, kind = "green"){
   clearScoreFlash();
+
+  if(!state.scoreVisible) return;
 
   const left = document.getElementById("scoreLeft");
   const right = document.getElementById("scoreRight");
@@ -795,10 +1090,11 @@ function flashScoringSide(side){
     ( state.scoreFlipped && side === "B");
 
   const target = flashLeft ? left : right;
-  target.classList.add("flash");
+  const className = kind === "red" ? "flash-red" : "flash";
+  target.classList.add(className);
 
   scoreFlashTimer = setTimeout(() => {
-    target.classList.remove("flash");
+    target.classList.remove(className);
     scoreFlashTimer = null;
   }, 1000);
 }
@@ -814,57 +1110,61 @@ function updateScoreDisplay(){
     left.textContent = state.scoreA;
     right.textContent = state.scoreB;
   }
+
+  updateScoreVisibility();
+}
+
+function updateScoreVisibility(){
+  document.getElementById("scoreDisplay").classList.toggle("hidden-ui", !state.scoreVisible);
+  document.getElementById("scoreFlipBtn").classList.toggle("hidden-ui", !state.scoreVisible);
 }
 
 function updateTopVisibility(){
   const controls = document.getElementById("teamControls");
-  const rosterBtn = document.getElementById("rosterBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const exportBtn = document.getElementById("exportBtn");
+  const settingsBtn = document.getElementById("settingsBtn");
   const visibilityBtn = document.getElementById("visibilityBtn");
 
   controls.classList.toggle("hidden-ui", state.controlsHidden);
-  rosterBtn.classList.toggle("hidden-ui", state.controlsHidden);
-  resetBtn.classList.toggle("hidden-ui", state.controlsHidden);
-  exportBtn.classList.toggle("hidden-ui", state.controlsHidden);
+  settingsBtn.classList.toggle("hidden-ui", state.controlsHidden);
+  closeSettingsMenu();
 
   visibilityBtn.textContent = state.controlsHidden ? "▢" : "▣";
   visibilityBtn.title = state.controlsHidden ? "Show extra controls" : "Hide extra controls";
-}
-
-function saveToLocal(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }catch(e){}
-}
-
-function loadFromLocal(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY);
-    if(!raw) return;
-    const parsed = JSON.parse(raw);
-    if(parsed && parsed.names && parsed.values){
-      Object.assign(state, DEFAULT_STATE(), parsed);
-      normalizeState();
-    }
-  }catch(e){}
 }
 
 function splitPreserveEmptyLines(text){
   return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
 }
 
+function rowsForTeam(team){
+  const rows = [];
+  for(let r=teamStart(team); r<teamEnd(team); r++) rows.push(r);
+  return rows;
+}
+
+function visibleRowsForTeam(team){
+  return rowsForTeam(team).filter(r => state.visible[r] !== false);
+}
+
+function teamTotal(team,id){
+  return rowsForTeam(team).reduce((sum,r) => sum + getValue(r,id), 0);
+}
+
+function teamCombinedTotal(team,ids){
+  return ids.reduce((sum,id) => sum + teamTotal(team,id), 0);
+}
+
 function setLastTouched(ref){
   const prev = state.lastTouched;
   if(prev){
-    const prevCell = document.getElementById(cellId(prev.r, prev.c));
+    const prevCell = document.getElementById(cellId(prev.r, prev.id));
     if(prevCell) prevCell.classList.remove("last-hit");
   }
 
-  state.lastTouched = ref ? {r: ref.r, c: ref.c} : null;
+  state.lastTouched = ref ? {r: ref.r, id: ref.id} : null;
 
   if(ref){
-    const nextCell = document.getElementById(cellId(ref.r, ref.c));
+    const nextCell = document.getElementById(cellId(ref.r, ref.id));
     if(nextCell) nextCell.classList.add("last-hit");
   }
 }
@@ -877,16 +1177,16 @@ function pulseCell(td){
 function clearLastTouchedImmediately(){
   const prev = state.lastTouched;
   if(!prev) return;
-  const prevCell = document.getElementById(cellId(prev.r, prev.c));
+  const prevCell = document.getElementById(cellId(prev.r, prev.id));
   if(prevCell){
     prevCell.classList.remove("last-hit");
   }
 }
 
-function updateCellDisplay(r,c){
-  const cell = document.getElementById(cellId(r,c));
+function updateCellDisplay(r,id){
+  const cell = document.getElementById(cellId(r,id));
   if(cell){
-    const v = state.values[r][c];
+    const v = getValue(r,id);
     cell.textContent = v ? String(v) : "";
   }
 }
@@ -902,18 +1202,18 @@ function pushAction(action){
   updateUndoRedoButtons();
 }
 
-function applyDelta(r,c,delta){
-  state.values[r][c] = Math.max(0, state.values[r][c] + delta);
-  updateCellDisplay(r,c);
+function applyDelta(r,id,delta){
+  setValue(r,id, getValue(r,id) + delta);
+  updateCellDisplay(r,id);
 }
 
-function applyScoreDelta(side, delta, shouldFlash = false){
+function applyScoreDelta(side, delta, flashKind = null){
   if(side === "A") state.scoreA = Math.max(0, state.scoreA + delta);
   if(side === "B") state.scoreB = Math.max(0, state.scoreB + delta);
   updateScoreDisplay();
 
-  if(shouldFlash && delta > 0){
-    flashScoringSide(side);
+  if(flashKind){
+    flashScoringSide(side, flashKind);
   }
 }
 
@@ -973,21 +1273,28 @@ function updateDynamicRowHeight(){
   document.documentElement.style.setProperty("--rowH", `${nextRowH}px`);
 }
 
+function updateVisibleStatCount(){
+  document.documentElement.style.setProperty("--visibleStatCount", String(Math.max(1, visibleStatIds().length)));
+}
+
 function applyAction(action, direction){
   if(action.type === "stat"){
-    applyDelta(action.r, action.c, action.delta * direction);
-    if(action.scoreSide) applyScoreDelta(action.scoreSide, direction, false);
-    setLastTouched(action.afterLastTouched || null);
+    applyDelta(action.r, action.id, action.delta * direction);
+    if(action.scoreSide){
+      applyScoreDelta(action.scoreSide, direction, direction < 0 ? "red" : "green");
+    }
+    setLastTouched(direction > 0 ? (action.afterLastTouched || null) : null);
+    recomputeDependencies();
     return;
   }
 
   if(action.type === "resetStats"){
     if(direction === 1){
       for(let r=0;r<TOTAL_ROWS;r++){
-        for(let c=0;c<STATS.length;c++){
-          state.values[r][c] = 0;
-          updateCellDisplay(r,c);
-        }
+        STAT_DEFS.forEach(s => {
+          setValue(r,s.id,0);
+          updateCellDisplay(r,s.id);
+        });
       }
       state.scoreA = 0;
       state.scoreB = 0;
@@ -996,10 +1303,10 @@ function applyAction(action, direction){
       clearScoreFlash();
     }else{
       for(let r=0;r<TOTAL_ROWS;r++){
-        for(let c=0;c<STATS.length;c++){
-          state.values[r][c] = action.prevValues[r][c];
-          updateCellDisplay(r,c);
-        }
+        STAT_DEFS.forEach(s => {
+          setValue(r,s.id, action.prevValues[r]?.[s.id] || 0);
+          updateCellDisplay(r,s.id);
+        });
       }
       state.scoreA = action.prevScoreA;
       state.scoreB = action.prevScoreB;
@@ -1007,32 +1314,70 @@ function applyAction(action, direction){
       setLastTouched(action.prevLastTouched || null);
       clearScoreFlash();
     }
+    recomputeDependencies();
   }
 }
 
 function render(){
+  renderHeader();
+
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
 
   tbody.appendChild(makeSepRow("A", state.teamAName, state.teamAColor));
   for(let r=0; r<ROWS_PER_TEAM; r++){
-    if(state.visible[r]) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
+    if(state.visible[r] !== false) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r]));
   }
 
   tbody.appendChild(makeSepRow("B", state.teamBName, state.teamBColor));
   for(let r=ROWS_PER_TEAM; r<TOTAL_ROWS; r++){
-    if(state.visible[r]) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
+    if(state.visible[r] !== false) tbody.appendChild(makePlayerRow(r, ROLE_LABELS[r-ROWS_PER_TEAM]));
   }
 
   document.getElementById("teamAName").value = state.teamAName;
   document.getElementById("teamBName").value = state.teamBName;
   document.getElementById("teamAColor").value = state.teamAColor;
   document.getElementById("teamBColor").value = state.teamBColor;
+  updateVisibleStatCount();
   updateScoreDisplay();
   updateTopVisibility();
   updateDynamicRowHeight();
 
   if(state.lastTouched) setLastTouched(state.lastTouched);
+  recomputeDependencies();
+}
+
+function renderHeader(){
+  const thead = document.getElementById("thead");
+  const stats = visibleStatIds();
+  let prevGroup = null;
+
+  const tr = document.createElement("tr");
+  tr.innerHTML = "";
+
+  const role = document.createElement("th");
+  role.className = "role";
+  role.textContent = "#";
+  tr.appendChild(role);
+
+  const player = document.createElement("th");
+  player.className = "player";
+  player.textContent = "Player";
+  tr.appendChild(player);
+
+  stats.forEach(id => {
+    const th = document.createElement("th");
+    const group = statGroup(id);
+    th.className = "stat" + (group !== prevGroup ? " group-start" : "");
+    th.dataset.statId = id;
+    th.textContent = statLabel(id);
+    th.title = `${statLabel(id)} · ${group}`;
+    tr.appendChild(th);
+    prevGroup = group;
+  });
+
+  thead.innerHTML = "";
+  thead.appendChild(tr);
 }
 
 function makeSepRow(team, label, hex){
@@ -1040,7 +1385,7 @@ function makeSepRow(team, label, hex){
   tr.className = "sep";
 
   const td = document.createElement("td");
-  td.colSpan = 17;
+  td.colSpan = 2 + visibleStatIds().length;
   td.id = sepId(team);
   td.style.background = hex;
   td.style.color = getContrastText(hex);
@@ -1057,7 +1402,6 @@ function makePlayerRow(r, roleLabel){
   const tdRole = document.createElement("td");
   tdRole.className = "role";
   tdRole.textContent = roleLabel;
-  tdRole.dataset.col = "0";
   tr.appendChild(tdRole);
 
   const tdName = document.createElement("td");
@@ -1065,7 +1409,6 @@ function makePlayerRow(r, roleLabel){
   tdName.contentEditable = "true";
   tdName.spellcheck = false;
   tdName.id = nameId(r);
-  tdName.dataset.col = "1";
   tdName.textContent = state.names[r] || "";
 
   tdName.addEventListener("focus", ()=>{
@@ -1099,15 +1442,18 @@ function makePlayerRow(r, roleLabel){
 
   tr.appendChild(tdName);
 
-  for(let c=0; c<STATS.length; c++){
+  const stats = visibleStatIds();
+  let prevGroup = null;
+
+  stats.forEach(id => {
     const td = document.createElement("td");
-    const colIndex = 2 + c;
+    const group = statGroup(id);
 
-    td.className = "stat" + (c === STATS.length - 1 ? " misc" : "");
-    td.dataset.col = String(colIndex);
-    td.id = cellId(r,c);
+    td.className = "stat" + (group !== prevGroup ? " group-start" : "");
+    td.dataset.statId = id;
+    td.id = cellId(r,id);
 
-    const v = state.values[r][c];
+    const v = getValue(r,id);
     td.textContent = v ? String(v) : "";
 
     let touchTapInProgress = false;
@@ -1122,23 +1468,24 @@ function makePlayerRow(r, roleLabel){
       clearLastTouchedImmediately();
       pulseCell(td);
 
-      state.values[r][c] += 1;
-      updateCellDisplay(r,c);
+      setValue(r,id,getValue(r,id) + 1);
+      updateCellDisplay(r,id);
 
-      const scoreSide = scoreSideForEvent(r,c);
-      if(scoreSide) applyScoreDelta(scoreSide, 1, true);
+      const scoreSide = scoreSideForEvent(r,id);
+      if(scoreSide) applyScoreDelta(scoreSide, 1, "green");
 
       const action = {
         type:"stat",
         r,
-        c,
+        id,
         delta:1,
         scoreSide,
-        afterLastTouched:{r,c}
+        afterLastTouched:{r,id}
       };
 
       pushAction(action);
-      setLastTouched({r,c});
+      setLastTouched({r,id});
+      recomputeDependencies();
       saveToLocal();
     };
 
@@ -1172,20 +1519,113 @@ function makePlayerRow(r, roleLabel){
     });
 
     tr.appendChild(td);
-  }
+    prevGroup = group;
+  });
 
   return tr;
 }
 
-function buildRosterEditor(){
-  const teamABox = document.getElementById("teamARosterRows");
-  const teamBBox = document.getElementById("teamBRosterRows");
-  teamABox.innerHTML = "";
-  teamBBox.innerHTML = "";
+function clearDependencyMarks(){
+  document.querySelectorAll("td.stat.dependency-missing").forEach(cell => {
+    cell.classList.remove("dependency-missing");
+  });
+}
+
+function markDependencyCell(r,id){
+  if(state.visible[r] === false) return;
+  if(!isStatVisible(id)) return;
+  const cell = document.getElementById(cellId(r,id));
+  if(cell) cell.classList.add("dependency-missing");
+}
+
+function markDependencyTeamColumn(team,id){
+  if(!isStatVisible(id)) return;
+  visibleRowsForTeam(team).forEach(r => markDependencyCell(r,id));
+}
+
+function recomputeDependencies(){
+  clearDependencyMarks();
 
   for(let r=0;r<TOTAL_ROWS;r++){
-    const row = document.createElement("div");
-    row.className = "rosterSlotRow";
+    if(state.visible[r] === false) continue;
+
+    if(getValue(r,"apeKills") > getValue(r,"apeAttempts")){
+      markDependencyCell(r,"apeAttempts");
+    }
+
+    if(getValue(r,"spikeKills") > getValue(r,"spikeAttempts")){
+      markDependencyCell(r,"spikeAttempts");
+    }
+
+    const apingErrorsOn = isStatVisible("apingErrors");
+    if(apingErrorsOn){
+      if(getValue(r,"spikingErrors") > getValue(r,"spikeAttempts")){
+        markDependencyCell(r,"spikeAttempts");
+      }
+      if(getValue(r,"apingErrors") > getValue(r,"apeAttempts")){
+        markDependencyCell(r,"apeAttempts");
+      }
+    }else{
+      if(getValue(r,"spikingErrors") > (getValue(r,"spikeAttempts") + getValue(r,"apeAttempts"))){
+        markDependencyCell(r,"spikeAttempts");
+        markDependencyCell(r,"apeAttempts");
+      }
+    }
+
+    if(isStatVisible("receiveAttempts")){
+      if(getValue(r,"spikeReceives") > getValue(r,"receiveAttempts")){
+        markDependencyCell(r,"receiveAttempts");
+      }
+    }
+  }
+
+  ["A","B"].forEach(team => {
+    const enemy = enemyTeam(team);
+
+    const spikeKills = teamTotal(team,"spikeKills");
+    const assists = teamTotal(team,"assists");
+
+    if(spikeKills > assists){
+      markDependencyTeamColumn(team,"assists");
+    }
+
+    if(assists > spikeKills){
+      markDependencyTeamColumn(team,"spikeKills");
+    }
+
+    if(teamTotal(team,"bfs") > teamTotal(enemy,"softBlock")){
+      markDependencyTeamColumn(enemy,"softBlock");
+    }
+
+    if(teamTotal(team,"softBlock") > teamTotal(enemy,"bfs")){
+      markDependencyTeamColumn(enemy,"bfs");
+    }
+
+    if(!isStatVisible("receiveAttempts")){
+      const receives = teamTotal(team,"spikeReceives");
+      const enemyAttempts = teamCombinedTotal(enemy,["spikeAttempts","apeAttempts"]);
+      if(receives > enemyAttempts){
+        markDependencyTeamColumn(enemy,"spikeAttempts");
+        markDependencyTeamColumn(enemy,"apeAttempts");
+      }
+    }
+  });
+
+  if(state.lastTouched){
+    const lastCell = document.getElementById(cellId(state.lastTouched.r, state.lastTouched.id));
+    if(lastCell) lastCell.classList.add("last-hit");
+  }
+}
+
+function buildRosterGuide(containerId, team){
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  const start = teamStart(team);
+
+  for(let i=0;i<ROWS_PER_TEAM;i++){
+    const r = start + i;
+    const label = document.createElement("label");
+    label.className = "rosterGuideLine";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -1193,57 +1633,114 @@ function buildRosterEditor(){
     checkbox.dataset.r = String(r);
     checkbox.title = "Show this slot on the grid";
 
-    const role = document.createElement("div");
-    role.className = "rosterRole";
-    role.textContent = ROLE_LABELS[r % ROWS_PER_TEAM];
+    const role = document.createElement("span");
+    role.textContent = ROLE_LABELS[i];
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "rosterNameInput";
-    input.id = rosterInputId(r);
-    input.dataset.r = String(r);
-    input.spellcheck = false;
-    input.autocomplete = "off";
-    input.autocapitalize = "off";
-    input.placeholder = "Player";
-
-    input.addEventListener("paste", (e)=>{
-      const text = e.clipboardData?.getData("text") || "";
-      if(text.includes("\n") || text.includes("\r")){
-        e.preventDefault();
-        spreadRosterPaste(r, text);
-      }
-    });
-
-    row.appendChild(checkbox);
-    row.appendChild(role);
-    row.appendChild(input);
-
-    if(isTeamARow(r)) teamABox.appendChild(row);
-    else teamBBox.appendChild(row);
+    label.appendChild(checkbox);
+    label.appendChild(role);
+    container.appendChild(label);
   }
 }
 
+function buildRosterEditor(){
+  buildRosterGuide("teamARosterGuide", "A");
+  buildRosterGuide("teamBRosterGuide", "B");
+}
+
+function rosterTextForTeam(team){
+  const start = teamStart(team);
+  return Array.from({length: ROWS_PER_TEAM}, (_, i) => state.names[start + i] || "").join("\n");
+}
+
 function populateRosterEditor(){
+  document.getElementById("teamARosterText").value = rosterTextForTeam("A");
+  document.getElementById("teamBRosterText").value = rosterTextForTeam("B");
+
   for(let r=0;r<TOTAL_ROWS;r++){
-    const input = document.getElementById(rosterInputId(r));
     const checkbox = document.getElementById(rosterCheckId(r));
-    if(input) input.value = state.names[r] || "";
     if(checkbox) checkbox.checked = state.visible[r] !== false;
   }
 }
 
-function spreadRosterPaste(startIndex, text){
-  const lines = splitPreserveEmptyLines(text);
-  const teamStart = isTeamARow(startIndex) ? 0 : ROWS_PER_TEAM;
-  const teamEnd = teamStart + ROWS_PER_TEAM;
+function applyRosterTeam(team, text){
+  const start = teamStart(team);
+  const lines = splitPreserveEmptyLines(text).slice(0, ROWS_PER_TEAM);
+  const changed = [];
 
-  for(let i=0;i<lines.length;i++){
-    const r = startIndex + i;
-    if(r >= teamEnd) break;
-    const input = document.getElementById(rosterInputId(r));
-    if(input) input.value = lines[i];
+  for(let i=0;i<ROWS_PER_TEAM;i++){
+    const r = start + i;
+    const nextName = lines[i] ?? "";
+    if(nextName !== (state.names[r] || "")){
+      state.names[r] = nextName;
+      changed.push(r);
+    }
+
+    const checkbox = document.getElementById(rosterCheckId(r));
+    state.visible[r] = checkbox ? checkbox.checked : state.visible[r] !== false;
   }
+
+  return changed;
+}
+
+function buildEditBoard(){
+  const editor = document.getElementById("columnEditor");
+  editor.innerHTML = "";
+  document.getElementById("scoreVisibleEdit").checked = state.scoreVisible;
+
+  editDraftOrder.forEach((id, index) => {
+    const def = STAT_BY_ID[id];
+    if(!def) return;
+
+    const row = document.createElement("div");
+    row.className = "columnRow" + (def.extra ? " extraStat" : "");
+    row.dataset.id = id;
+
+    const visible = document.createElement("input");
+    visible.type = "checkbox";
+    visible.id = `edit_visible_${id}`;
+    visible.checked = isStatVisible(id);
+
+    const label = document.createElement("div");
+    label.className = "columnLabel";
+    label.textContent = def.label;
+
+    const group = document.createElement("select");
+    group.id = `edit_group_${id}`;
+    GROUPS.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      if(statGroup(id) === g) opt.selected = true;
+      group.appendChild(opt);
+    });
+
+    const up = document.createElement("button");
+    up.className = "smallMoveBtn";
+    up.textContent = "↑";
+    up.disabled = index === 0;
+    up.addEventListener("click", () => {
+      if(index <= 0) return;
+      [editDraftOrder[index - 1], editDraftOrder[index]] = [editDraftOrder[index], editDraftOrder[index - 1]];
+      buildEditBoard();
+    });
+
+    const down = document.createElement("button");
+    down.className = "smallMoveBtn";
+    down.textContent = "↓";
+    down.disabled = index === editDraftOrder.length - 1;
+    down.addEventListener("click", () => {
+      if(index >= editDraftOrder.length - 1) return;
+      [editDraftOrder[index + 1], editDraftOrder[index]] = [editDraftOrder[index], editDraftOrder[index + 1]];
+      buildEditBoard();
+    });
+
+    row.appendChild(visible);
+    row.appendChild(label);
+    row.appendChild(group);
+    row.appendChild(up);
+    row.appendChild(down);
+    editor.appendChild(row);
+  });
 }
 
 function clearElementForReset(el){
@@ -1281,8 +1778,7 @@ function getDiagonalResetElements(){
       return;
     }
 
-    cells.forEach((el, fallbackCol) => {
-      const col = Number(el.dataset.col ?? fallbackCol);
+    cells.forEach((el, col) => {
       items.push({el, row:rowIndex, col});
     });
 
@@ -1325,176 +1821,78 @@ function runDiagonalResetBoardAnimation(){
   }, maxDelay + 460);
 }
 
-document.getElementById("undoBtn").addEventListener("click", ()=>{
-  const action = undoStack.pop();
-  if(!action) return;
-
-  applyAction(action, -1);
-  redoStack.push(cloneDeep(action));
-
-  const newLast = undoStack.length ? undoStack[undoStack.length - 1] : null;
-  if(newLast && newLast.type === "stat"){
-    setLastTouched({r:newLast.r, c:newLast.c});
-  }else{
-    setLastTouched(null);
-  }
-
-  updateUndoRedoButtons();
-  saveToLocal();
-});
-
-document.getElementById("redoBtn").addEventListener("click", ()=>{
-  const action = redoStack.pop();
-  if(!action) return;
-
-  if(action.type === "stat"){
-    applyDelta(action.r, action.c, action.delta);
-    if(action.scoreSide) applyScoreDelta(action.scoreSide, 1, true);
-    undoStack.push(cloneDeep(action));
-    setLastTouched({r:action.r, c:action.c});
-  }else if(action.type === "resetStats"){
-    applyAction(action, 1);
-    undoStack.push(cloneDeep(action));
-    setLastTouched(null);
-  }
-
-  updateUndoRedoButtons();
-  saveToLocal();
-});
-
-document.getElementById("scoreFlipBtn").addEventListener("click", ()=>{
-  state.scoreFlipped = !state.scoreFlipped;
-  clearScoreFlash();
-  updateScoreDisplay();
-  saveToLocal();
-});
-
-document.getElementById("visibilityBtn").addEventListener("click", ()=>{
-  state.controlsHidden = !state.controlsHidden;
-  updateTopVisibility();
-  saveToLocal();
-});
-
-const overlay = document.getElementById("modalOverlay");
-const resetOverlay = document.getElementById("resetModalOverlay");
-
-function setMenuActive(btn, active){
-  btn.classList.toggle("menuBtn-active", active);
+function toggleSettingsMenu(){
+  const btn = document.getElementById("settingsBtn");
+  const menu = document.getElementById("settingsMenu");
+  const next = !menu.classList.contains("open");
+  menu.classList.toggle("open", next);
+  btn.classList.toggle("settingsOpen", next);
 }
 
+function closeSettingsMenu(){
+  const btn = document.getElementById("settingsBtn");
+  const menu = document.getElementById("settingsMenu");
+  if(menu){
+    menu.classList.remove("open");
+  }
+  if(btn){
+    btn.classList.remove("settingsOpen");
+  }
+}
+
+const rosterOverlay = document.getElementById("modalOverlay");
+const resetOverlay = document.getElementById("resetModalOverlay");
+const editOverlay = document.getElementById("editBoardOverlay");
+
 function openRoster(){
+  closeSettingsMenu();
   populateRosterEditor();
-  overlay.style.display = "flex";
-  setMenuActive(document.getElementById("rosterBtn"), true);
-  setTimeout(() => {
-    const first = document.getElementById(rosterInputId(0));
-    if(first) first.focus();
-  }, 50);
+  rosterOverlay.style.display = "flex";
+  setTimeout(() => document.getElementById("teamARosterText").focus(), 50);
 }
 
 function closeRoster(){
-  overlay.style.display = "none";
-  setMenuActive(document.getElementById("rosterBtn"), false);
+  rosterOverlay.style.display = "none";
 }
 
 function openResetModal(){
+  closeSettingsMenu();
   resetOverlay.style.display = "flex";
-  setMenuActive(document.getElementById("resetBtn"), true);
 }
 
 function closeResetModal(){
   resetOverlay.style.display = "none";
-  setMenuActive(document.getElementById("resetBtn"), false);
 }
 
-document.getElementById("resetBtn").addEventListener("click", openResetModal);
-document.getElementById("closeResetTop").addEventListener("click", closeResetModal);
-document.getElementById("closeResetBottom").addEventListener("click", closeResetModal);
+function openEditBoard(){
+  closeSettingsMenu();
+  editDraftOrder = state.statOrder.slice();
+  buildEditBoard();
+  editOverlay.style.display = "flex";
+}
 
-document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
-  const action = {
-    type:"resetStats",
-    prevValues: state.values.map(row => row.slice()),
-    prevScoreA: state.scoreA,
-    prevScoreB: state.scoreB,
-    prevLastTouched: state.lastTouched ? {...state.lastTouched} : null
-  };
+function closeEditBoard(){
+  editOverlay.style.display = "none";
+}
 
-  const changedIds = [];
-  for(let r=0;r<TOTAL_ROWS;r++){
-    for(let c=0;c<STATS.length;c++){
-      if(state.values[r][c] !== 0 && state.visible[r] !== false){
-        changedIds.push(cellId(r,c));
-      }
-    }
-  }
-
-  pushAction(action);
-  closeResetModal();
-
-  if(changedIds.length){
-    changedIds.forEach(id => {
-      const el = document.getElementById(id);
-      startInstantFlash(el);
-    });
-
-    setTimeout(() => {
-      for(let r=0;r<TOTAL_ROWS;r++){
-        for(let c=0;c<STATS.length;c++){
-          state.values[r][c] = 0;
-          updateCellDisplay(r,c);
-        }
-      }
-      state.scoreA = 0;
-      state.scoreB = 0;
-      updateScoreDisplay();
-      setLastTouched(null);
-      saveToLocal();
-      updateUndoRedoButtons();
-
-      changedIds.forEach(id => {
-        const el = document.getElementById(id);
-        endFlashToBase(el);
-      });
-    }, 40);
-  } else {
-    for(let r=0;r<TOTAL_ROWS;r++){
-      for(let c=0;c<STATS.length;c++){
-        state.values[r][c] = 0;
-      }
-    }
-    state.scoreA = 0;
-    state.scoreB = 0;
-    updateScoreDisplay();
-    setLastTouched(null);
-    saveToLocal();
-    updateUndoRedoButtons();
-    render();
-  }
-});
-
-document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
-  closeResetModal();
-  runDiagonalResetBoardAnimation();
-});
-
-document.getElementById("exportBtn").addEventListener("click", ()=>{
-  const header = ["#","Player", ...STATS];
+function exportCsv(){
+  const stats = visibleStatIds();
+  const header = ["#","Player", ...stats.map(statLabel)];
   const rows = [header];
 
-  rows.push([`== ${state.teamAName || ""} ==`, "", ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamAName || ""} ==`, "", ...Array(stats.length).fill("")]);
   for(let r=0;r<ROWS_PER_TEAM;r++){
     if(state.visible[r] === false) continue;
-    rows.push([ROLE_LABELS[r], state.names[r] || "", ...state.values[r].map(v => v ? String(v) : "")]);
+    rows.push([ROLE_LABELS[r], state.names[r] || "", ...stats.map(id => getValue(r,id) ? String(getValue(r,id)) : "")]);
   }
 
-  rows.push([`== ${state.teamBName || ""} ==`, "", ...Array(STATS.length).fill("")]);
+  rows.push([`== ${state.teamBName || ""} ==`, "", ...Array(stats.length).fill("")]);
   for(let r=ROWS_PER_TEAM;r<TOTAL_ROWS;r++){
     if(state.visible[r] === false) continue;
-    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...state.values[r].map(v => v ? String(v) : "")]);
+    rows.push([ROLE_LABELS[r-ROWS_PER_TEAM], state.names[r] || "", ...stats.map(id => getValue(r,id) ? String(getValue(r,id)) : "")]);
   }
 
-  rows.push(["Score", `${state.scoreA} - ${state.scoreB}`, ...Array(STATS.length).fill("")]);
+  rows.push(["Score", `${state.scoreA} - ${state.scoreB}`, ...Array(stats.length).fill("")]);
 
   const csv = rows.map(row =>
     row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(",")
@@ -1504,117 +1902,255 @@ document.getElementById("exportBtn").addEventListener("click", ()=>{
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `rvl12_stats_${Date.now()}.csv`;
+  a.download = `rvl16_stats_${Date.now()}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-});
+}
 
-document.getElementById("teamAName").addEventListener("input", (e)=>{
-  state.teamAName = e.target.value;
-  const sep = document.getElementById(sepId("A"));
-  if(sep) sep.textContent = state.teamAName;
-  saveToLocal();
-});
+function wireEvents(){
+  document.getElementById("undoBtn").addEventListener("click", ()=>{
+    const action = undoStack.pop();
+    if(!action) return;
 
-document.getElementById("teamBName").addEventListener("input", (e)=>{
-  state.teamBName = e.target.value;
-  const sep = document.getElementById(sepId("B"));
-  if(sep) sep.textContent = state.teamBName;
-  saveToLocal();
-});
+    applyAction(action, -1);
+    redoStack.push(cloneDeep(action));
 
-document.getElementById("teamAName").addEventListener("keydown", (e)=>{
-  if(e.key === "Enter"){
-    e.preventDefault();
-    e.target.blur();
-  }
-});
-
-document.getElementById("teamBName").addEventListener("keydown", (e)=>{
-  if(e.key === "Enter"){
-    e.preventDefault();
-    e.target.blur();
-  }
-});
-
-document.getElementById("teamAColor").addEventListener("input", (e)=>{
-  state.teamAColor = e.target.value;
-  const sep = document.getElementById(sepId("A"));
-  if(sep){
-    sep.style.background = state.teamAColor;
-    sep.style.color = getContrastText(state.teamAColor);
-  }
-  saveToLocal();
-});
-
-document.getElementById("teamBColor").addEventListener("input", (e)=>{
-  state.teamBColor = e.target.value;
-  const sep = document.getElementById(sepId("B"));
-  if(sep){
-    sep.style.background = state.teamBColor;
-    sep.style.color = getContrastText(state.teamBColor);
-  }
-  saveToLocal();
-});
-
-const rosterBtn = document.getElementById("rosterBtn");
-const closeTop = document.getElementById("closeRosterTop");
-const closeBottom = document.getElementById("closeRosterBottom");
-const applyRosterBtn = document.getElementById("applyRosterBtn");
-
-rosterBtn.addEventListener("click", openRoster);
-closeTop.addEventListener("click", closeRoster);
-closeBottom.addEventListener("click", closeRoster);
-
-applyRosterBtn.addEventListener("click", ()=>{
-  const changedNames = [];
-  let visibilityChanged = false;
-
-  for(let r=0;r<TOTAL_ROWS;r++){
-    const input = document.getElementById(rosterInputId(r));
-    const checkbox = document.getElementById(rosterCheckId(r));
-    const nextName = input ? input.value : "";
-    const nextVisible = checkbox ? checkbox.checked : true;
-
-    if(nextName !== (state.names[r] ?? "")){
-      changedNames.push(r);
-      state.names[r] = nextName;
+    const newLast = undoStack.length ? undoStack[undoStack.length - 1] : null;
+    if(newLast && newLast.type === "stat"){
+      setLastTouched({r:newLast.r, id:newLast.id});
+    }else{
+      setLastTouched(null);
     }
 
-    if(nextVisible !== (state.visible[r] !== false)){
-      visibilityChanged = true;
-      state.visible[r] = nextVisible;
-    }
-  }
-
-  saveToLocal();
-  closeRoster();
-  render();
-
-  changedNames.forEach((r, seqIndex) => {
-    if(state.visible[r] === false) return;
-    const el = document.getElementById(nameId(r));
-    setTimeout(() => flashElement(el), seqIndex * 34);
+    updateUndoRedoButtons();
+    saveToLocal();
   });
 
-  if(visibilityChanged){
-    updateDynamicRowHeight();
-  }
-});
+  document.getElementById("redoBtn").addEventListener("click", ()=>{
+    const action = redoStack.pop();
+    if(!action) return;
 
-document.addEventListener("keydown", (e)=>{
-  if(e.key === "Escape" && overlay.style.display === "flex") closeRoster();
-  if(e.key === "Escape" && resetOverlay.style.display === "flex") closeResetModal();
-});
+    applyAction(action, 1);
+    undoStack.push(cloneDeep(action));
 
-window.addEventListener("resize", updateDynamicRowHeight);
+    if(action.type === "stat") setLastTouched({r:action.r, id:action.id});
+    if(action.type === "resetStats") setLastTouched(null);
+
+    updateUndoRedoButtons();
+    saveToLocal();
+  });
+
+  document.getElementById("scoreFlipBtn").addEventListener("click", (e)=>{
+    flashElement(e.currentTarget);
+    state.scoreFlipped = !state.scoreFlipped;
+    clearScoreFlash();
+    updateScoreDisplay();
+    saveToLocal();
+  });
+
+  document.getElementById("visibilityBtn").addEventListener("click", (e)=>{
+    flashElement(e.currentTarget);
+    state.controlsHidden = !state.controlsHidden;
+    updateTopVisibility();
+    saveToLocal();
+  });
+
+  document.getElementById("settingsBtn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    toggleSettingsMenu();
+  });
+
+  document.getElementById("settingsMenu").addEventListener("click", (e)=>{
+    e.stopPropagation();
+  });
+
+  document.addEventListener("click", closeSettingsMenu);
+
+  document.getElementById("editBoardMenuBtn").addEventListener("click", openEditBoard);
+  document.getElementById("rosterMenuBtn").addEventListener("click", openRoster);
+  document.getElementById("resetMenuBtn").addEventListener("click", openResetModal);
+  document.getElementById("exportMenuBtn").addEventListener("click", ()=>{
+    closeSettingsMenu();
+    exportCsv();
+  });
+
+  document.getElementById("closeRosterTop").addEventListener("click", closeRoster);
+  document.getElementById("closeRosterBottom").addEventListener("click", closeRoster);
+
+  document.getElementById("closeResetTop").addEventListener("click", closeResetModal);
+  document.getElementById("closeResetBottom").addEventListener("click", closeResetModal);
+
+  document.getElementById("closeEditTop").addEventListener("click", closeEditBoard);
+  document.getElementById("closeEditBottom").addEventListener("click", closeEditBoard);
+
+  document.getElementById("applyRosterBtn").addEventListener("click", ()=>{
+    const changed = [
+      ...applyRosterTeam("A", document.getElementById("teamARosterText").value),
+      ...applyRosterTeam("B", document.getElementById("teamBRosterText").value)
+    ];
+
+    saveToLocal();
+    closeRoster();
+    render();
+
+    changed.forEach((r, seqIndex) => {
+      if(state.visible[r] === false) return;
+      const el = document.getElementById(nameId(r));
+      setTimeout(() => flashElement(el), seqIndex * 34);
+    });
+  });
+
+  document.getElementById("applyEditBoardBtn").addEventListener("click", ()=>{
+    state.scoreVisible = document.getElementById("scoreVisibleEdit").checked;
+    state.statOrder = editDraftOrder.slice();
+
+    STAT_DEFS.forEach(s => {
+      const visible = document.getElementById(`edit_visible_${s.id}`);
+      const group = document.getElementById(`edit_group_${s.id}`);
+      if(visible) state.statVisible[s.id] = visible.checked;
+      if(group) state.statGroups[s.id] = group.value;
+    });
+
+    saveToLocal();
+    closeEditBoard();
+    render();
+  });
+
+  document.getElementById("resetStatsBtn").addEventListener("click", ()=>{
+    const action = {
+      type:"resetStats",
+      prevValues: state.values.map(row => ({...row})),
+      prevScoreA: state.scoreA,
+      prevScoreB: state.scoreB,
+      prevLastTouched: state.lastTouched ? {...state.lastTouched} : null
+    };
+
+    const changedIds = [];
+    for(let r=0;r<TOTAL_ROWS;r++){
+      if(state.visible[r] === false) continue;
+      STAT_DEFS.forEach(s => {
+        if(getValue(r,s.id) !== 0 && isStatVisible(s.id)){
+          changedIds.push(cellId(r,s.id));
+        }
+      });
+    }
+
+    pushAction(action);
+    closeResetModal();
+
+    if(changedIds.length){
+      changedIds.forEach(id => {
+        const el = document.getElementById(id);
+        startInstantFlash(el);
+      });
+
+      setTimeout(() => {
+        for(let r=0;r<TOTAL_ROWS;r++){
+          STAT_DEFS.forEach(s => {
+            setValue(r,s.id,0);
+            updateCellDisplay(r,s.id);
+          });
+        }
+        state.scoreA = 0;
+        state.scoreB = 0;
+        updateScoreDisplay();
+        setLastTouched(null);
+        recomputeDependencies();
+        saveToLocal();
+        updateUndoRedoButtons();
+
+        changedIds.forEach(id => {
+          const el = document.getElementById(id);
+          endFlashToBase(el);
+        });
+      }, 40);
+    } else {
+      for(let r=0;r<TOTAL_ROWS;r++){
+        STAT_DEFS.forEach(s => setValue(r,s.id,0));
+      }
+      state.scoreA = 0;
+      state.scoreB = 0;
+      updateScoreDisplay();
+      setLastTouched(null);
+      recomputeDependencies();
+      saveToLocal();
+      updateUndoRedoButtons();
+      render();
+    }
+  });
+
+  document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
+    closeResetModal();
+    runDiagonalResetBoardAnimation();
+  });
+
+  document.getElementById("teamAName").addEventListener("input", (e)=>{
+    state.teamAName = e.target.value;
+    const sep = document.getElementById(sepId("A"));
+    if(sep) sep.textContent = state.teamAName;
+    saveToLocal();
+  });
+
+  document.getElementById("teamBName").addEventListener("input", (e)=>{
+    state.teamBName = e.target.value;
+    const sep = document.getElementById(sepId("B"));
+    if(sep) sep.textContent = state.teamBName;
+    saveToLocal();
+  });
+
+  document.getElementById("teamAName").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      e.target.blur();
+    }
+  });
+
+  document.getElementById("teamBName").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      e.target.blur();
+    }
+  });
+
+  document.getElementById("teamAColor").addEventListener("input", (e)=>{
+    state.teamAColor = e.target.value;
+    const sep = document.getElementById(sepId("A"));
+    if(sep){
+      sep.style.background = state.teamAColor;
+      sep.style.color = getContrastText(state.teamAColor);
+    }
+    saveToLocal();
+  });
+
+  document.getElementById("teamBColor").addEventListener("input", (e)=>{
+    state.teamBColor = e.target.value;
+    const sep = document.getElementById(sepId("B"));
+    if(sep){
+      sep.style.background = state.teamBColor;
+      sep.style.color = getContrastText(state.teamBColor);
+    }
+    saveToLocal();
+  });
+
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){
+      if(rosterOverlay.style.display === "flex") closeRoster();
+      if(resetOverlay.style.display === "flex") closeResetModal();
+      if(editOverlay.style.display === "flex") closeEditBoard();
+      closeSettingsMenu();
+    }
+  });
+
+  window.addEventListener("resize", updateDynamicRowHeight);
+}
 
 loadFromLocal();
 normalizeState();
 buildRosterEditor();
 populateRosterEditor();
+wireEvents();
 render();
 updateUndoRedoButtons();
 </script>
