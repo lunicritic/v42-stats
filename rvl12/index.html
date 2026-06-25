@@ -283,7 +283,7 @@
     border-collapse:collapse;
     table-layout:fixed;
     width:100%;
-    height:100%;
+    height:auto;
   }
 
   th, td{
@@ -577,14 +577,62 @@
     overflow:auto;
   }
 
+  .editTabs{
+    display:flex;
+    gap:8px;
+    border:1px solid #242424;
+    border-radius:12px;
+    background:#0d0d0d;
+    padding:6px;
+  }
+
+  .tabBtn{
+    height:28px;
+    border-radius:9px;
+    font-size:12px;
+  }
+
+  .tabBtn.active{
+    background:#fff !important;
+    color:#000 !important;
+    border-color:transparent !important;
+  }
+
+  .tabPanel{
+    display:none;
+    flex:1;
+    min-height:0;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .tabPanel.active{
+    display:flex;
+  }
+
+  .editActions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
   .columnRow{
     display:grid;
-    grid-template-columns:34px 1fr 132px 34px 34px;
+    grid-template-columns:34px 34px 1fr 118px 34px 34px;
     gap:8px;
     align-items:center;
     min-height:38px;
     padding:5px 8px;
     border-bottom:1px solid #1f1f1f;
+    transition: background-color .22s ease, transform .22s ease, box-shadow .22s ease;
+  }
+
+  .columnRow.justMoved{
+    background:#fff !important;
+    color:#000 !important;
+    transform:translateY(-1px);
+    box-shadow:inset 0 0 0 2px #fff;
   }
 
   .columnRow:last-child{
@@ -603,6 +651,77 @@
     width:18px;
     height:18px;
     justify-self:center;
+  }
+
+  .boundaryBox{
+    position:relative;
+  }
+
+  .boundaryBox::after{
+    content:"";
+    position:absolute;
+    right:-3px;
+    top:4px;
+    bottom:4px;
+    width:2px;
+    background:var(--gridBold);
+    opacity:.9;
+    border-radius:2px;
+    pointer-events:none;
+  }
+
+  .saveLoadGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    flex:1;
+    min-height:0;
+  }
+
+  .saveLoadBox{
+    border:1px solid #242424;
+    border-radius:12px;
+    background:#0d0d0d;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:0;
+  }
+
+  .saveLoadTitle{
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .optionGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 12px;
+    font-size:11px;
+    line-height:1.25;
+  }
+
+  .optionGrid label{
+    display:flex;
+    gap:7px;
+    align-items:center;
+  }
+
+  .stateTextArea{
+    flex:1;
+    min-height:160px;
+    width:100%;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:#070707;
+    color:#fff;
+    padding:10px;
+    font-size:11px;
+    line-height:1.35;
+    outline:none;
+    resize:none;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
 
   .columnLabel{
@@ -675,8 +794,12 @@
       min-height:520px;
     }
     .columnRow{
-      grid-template-columns:30px 1fr 112px 32px 32px;
-      gap:6px;
+      grid-template-columns:28px 28px 1fr 94px 30px 30px;
+      gap:5px;
+    }
+    .saveLoadGrid{
+      grid-template-columns:1fr;
+      overflow:auto;
     }
   }
 </style>
@@ -784,15 +907,51 @@
     </div>
 
     <div class="modalBody">
-      <div class="editTopOptions">
-        <label><input id="scoreVisibleEdit" type="checkbox" /> Show scoreboard</label>
+      <div class="editTabs">
+        <button id="columnsTabBtn" class="tabBtn active">Columns</button>
+        <button id="saveLoadTabBtn" class="tabBtn">Save / Load</button>
       </div>
 
-      <div id="columnEditor" class="columnEditor"></div>
+      <div id="columnsTabPanel" class="tabPanel active">
+        <div class="editTopOptions">
+          <label><input id="scoreVisibleEdit" type="checkbox" /> Show scoreboard</label>
+          <span>Presets:</span>
+          <button id="rvlPresetBtn">RVL Stat Grid</button>
+          <button id="critPresetBtn">crit Stat Grid</button>
+        </div>
 
-      <div class="modalHint">
-        Grey bold lines are controlled by group changes in the visible column order. Move a stat or change its group to change where those boundaries appear.<br>
-        Extra stats are unchecked by default: Receive Attempts, Aping Errors, Block Errors, Receive Errors, and Technical Fouls.
+        <div id="columnEditor" class="columnEditor"></div>
+
+        <div class="modalHint">
+          The first checkbox shows/hides a stat. The second checkbox places a thick grey border before that stat.<br>
+          Use ↑ / ↓ to move columns. The moved row flashes white so you can see where it landed.
+        </div>
+      </div>
+
+      <div id="saveLoadTabPanel" class="tabPanel">
+        <div class="saveLoadGrid">
+          <div class="saveLoadBox">
+            <div class="saveLoadTitle">Generate board string</div>
+            <div class="optionGrid">
+              <label><input id="saveNamesTeams" type="checkbox" checked /> Names / teams / colours</label>
+              <label><input id="saveRosterRows" type="checkbox" checked /> Roster row visibility</label>
+              <label><input id="saveColumns" type="checkbox" checked /> Columns / borders / settings</label>
+              <label><input id="saveStats" type="checkbox" checked /> Stats / score</label>
+            </div>
+            <button id="generateStateBtn">Generate string</button>
+            <textarea id="stateExportText" class="stateTextArea" readonly></textarea>
+          </div>
+
+          <div class="saveLoadBox">
+            <div class="saveLoadTitle">Load board string</div>
+            <textarea id="stateImportText" class="stateTextArea" placeholder="Paste saved board string here"></textarea>
+            <div class="editActions">
+              <button id="loadStateBtn" class="btnApply">Load string</button>
+              <button id="copyStateBtn">Copy generated</button>
+            </div>
+            <div class="modalHint">Loading a string overwrites matching parts of the current board. You’ll get a warning before it applies.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -842,28 +1001,49 @@ const STAT_DEFS = [
   {id:"spikingErrors", label:"Spiking Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
   {id:"apeKills", label:"Ape Kills", group:"Apes", extra:false, defaultVisible:true, point:"same"},
   {id:"apeAttempts", label:"Ape Attempts", group:"Apes", extra:false, defaultVisible:true, point:null},
+  {id:"apingErrors", label:"Aping Errors", group:"Errors", extra:true, defaultVisible:false, point:"other"},
   {id:"spikeKills", label:"Spike Kills", group:"Spikes", extra:false, defaultVisible:true, point:"same"},
   {id:"spikeAttempts", label:"Spike Attempts", group:"Spikes", extra:false, defaultVisible:true, point:null},
   {id:"killBlock", label:"Kill Block", group:"Blocks", extra:false, defaultVisible:true, point:"same"},
   {id:"softBlock", label:"Soft Block", group:"Blocks", extra:false, defaultVisible:true, point:null},
   {id:"oneTouch", label:"One Touch", group:"Blocks", extra:false, defaultVisible:true, point:null},
-  {id:"assists", label:"Assists", group:"Sets", extra:false, defaultVisible:true, point:null},
-  {id:"spikeReceives", label:"Spike Receives", group:"Receives", extra:false, defaultVisible:true, point:null},
-  {id:"bfs", label:"BFs", group:"Blocks", extra:false, defaultVisible:true, point:null},
-  {id:"aces", label:"Aces", group:"Serves", extra:false, defaultVisible:true, point:"same"},
-  {id:"miscErrors", label:"Misc. Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
-  {id:"setErrors", label:"Set. Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
-  {id:"serveErrors", label:"Serve Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
-
-  {id:"receiveAttempts", label:"Receive Attempts", group:"Receives", extra:true, defaultVisible:false, point:null},
-  {id:"apingErrors", label:"Aping Errors", group:"Errors", extra:true, defaultVisible:false, point:"other"},
   {id:"blockErrors", label:"Block Errors", group:"Errors", extra:true, defaultVisible:false, point:"other"},
+  {id:"assists", label:"Assists", group:"Sets", extra:false, defaultVisible:true, point:null},
+  {id:"setErrors", label:"Set. Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
+  {id:"spikeReceives", label:"Spike Receives", group:"Receives", extra:false, defaultVisible:true, point:null},
+  {id:"receiveAttempts", label:"Receive Attempts", group:"Receives", extra:true, defaultVisible:false, point:null},
+  {id:"bfs", label:"BFs", group:"Blocks", extra:false, defaultVisible:true, point:null},
   {id:"receiveErrors", label:"Receive Errors", group:"Errors", extra:true, defaultVisible:false, point:"other"},
+  {id:"aces", label:"Aces", group:"Serves", extra:false, defaultVisible:true, point:"same"},
+  {id:"serveErrors", label:"Serve Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
+  {id:"miscErrors", label:"Misc. Errors", group:"Errors", extra:false, defaultVisible:true, point:"other"},
   {id:"technicalFouls", label:"Technical Fouls", group:"Errors", extra:true, defaultVisible:false, point:"other"}
 ];
 
 const STAT_BY_ID = Object.fromEntries(STAT_DEFS.map(s => [s.id, s]));
 const DEFAULT_STAT_ORDER = STAT_DEFS.map(s => s.id);
+const DEFAULT_BOUNDARY_IDS = new Set([
+  "spikingErrors",
+  "apeKills",
+  "spikeKills",
+  "killBlock",
+  "assists",
+  "spikeReceives",
+  "aces",
+  "miscErrors",
+  "technicalFouls"
+]);
+const CRIT_BOUNDARY_IDS = new Set([
+  "spikingErrors",
+  "apeKills",
+  "spikeKills",
+  "killBlock",
+  "assists",
+  "spikeReceives",
+  "aces",
+  "miscErrors",
+  "technicalFouls"
+]);
 const GROUPS = ["Apes","Spikes","Blocks","Sets","Receives","Serves","Errors","Other"];
 
 const OLD_STAT_IDS = [
@@ -878,7 +1058,7 @@ const TOTAL_ROWS = ROWS_PER_TEAM * 2;
 const ROLE_LABELS = ["C","VC","3","4","5","6","7","8","9","10","11","12","13","14","15","16"];
 
 const DEFAULT_TEAM_COLOR = "#c8c8c8";
-const STORAGE_KEY = "rvl16_stat_grid_state";
+const STORAGE_KEY = "rvl16_stat_grid_state_v3";
 const OLD_STORAGE_KEY = "rvl12_stat_grid_state";
 const OLDER_STORAGE_KEY = "v42_state";
 
@@ -898,7 +1078,8 @@ const DEFAULT_STATE = () => ({
   controlsHidden: false,
   statOrder: DEFAULT_STAT_ORDER.slice(),
   statVisible: Object.fromEntries(STAT_DEFS.map(s => [s.id, !!s.defaultVisible])),
-  statGroups: Object.fromEntries(STAT_DEFS.map(s => [s.id, s.group]))
+  statGroups: Object.fromEntries(STAT_DEFS.map(s => [s.id, s.group])),
+  statBoundaries: Object.fromEntries(STAT_DEFS.map(s => [s.id, DEFAULT_BOUNDARY_IDS.has(s.id)]))
 });
 
 function makeEmptyValueRow(){
@@ -911,6 +1092,10 @@ const redoStack = [];
 
 let scoreFlashTimer = null;
 let editDraftOrder = [];
+let editDraftVisible = {};
+let editDraftGroups = {};
+let editDraftBoundaries = {};
+let movedEditId = null;
 
 function isTeamARow(r){ return r < ROWS_PER_TEAM; }
 function teamOfRow(r){ return isTeamARow(r) ? "A" : "B"; }
@@ -923,6 +1108,7 @@ function sepId(team){ return team === "A" ? "sep_team_a" : "sep_team_b"; }
 function rosterCheckId(r){ return `roster_check_${r}`; }
 function statLabel(id){ return STAT_BY_ID[id]?.label || id; }
 function statGroup(id){ return state.statGroups?.[id] || STAT_BY_ID[id]?.group || "Other"; }
+function statBoundary(id){ return state.statBoundaries?.[id] === true; }
 function isStatVisible(id){ return state.statVisible?.[id] !== false && !!STAT_BY_ID[id]; }
 function visibleStatIds(){ return state.statOrder.filter(id => isStatVisible(id)); }
 
@@ -1022,6 +1208,11 @@ function normalizeState(){
     if(!GROUPS.includes(state.statGroups[s.id])) state.statGroups[s.id] = s.group;
   });
 
+  state.statBoundaries = state.statBoundaries && typeof state.statBoundaries === "object" ? state.statBoundaries : {};
+  STAT_DEFS.forEach(s => {
+    if(typeof state.statBoundaries[s.id] !== "boolean") state.statBoundaries[s.id] = DEFAULT_BOUNDARY_IDS.has(s.id);
+  });
+
   if(state.lastTouched && !STAT_BY_ID[state.lastTouched.id]) state.lastTouched = null;
 }
 
@@ -1033,7 +1224,7 @@ function saveToLocal(){
 
 function loadFromLocal(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_STORAGE_KEY) || localStorage.getItem(OLDER_STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return;
     const parsed = migrateLegacy24(JSON.parse(raw));
     if(parsed && parsed.names && parsed.values){
@@ -1268,9 +1459,10 @@ function updateDynamicRowHeight(){
   const headerH = header.offsetHeight || 34;
   const sepH = 36;
   const available = Math.max(0, wrap.clientHeight - headerH - sepH);
-  const nextRowH = Math.max(26, Math.floor(available / visibleRows));
+  const nextRowH = Math.max(16, Math.floor(available / visibleRows));
 
   document.documentElement.style.setProperty("--rowH", `${nextRowH}px`);
+  document.documentElement.style.setProperty("--fontB", `${nextRowH < 22 ? 10 : 12}px`);
 }
 
 function updateVisibleStatCount(){
@@ -1350,7 +1542,6 @@ function render(){
 function renderHeader(){
   const thead = document.getElementById("thead");
   const stats = visibleStatIds();
-  let prevGroup = null;
 
   const tr = document.createElement("tr");
   tr.innerHTML = "";
@@ -1368,12 +1559,11 @@ function renderHeader(){
   stats.forEach(id => {
     const th = document.createElement("th");
     const group = statGroup(id);
-    th.className = "stat" + (group !== prevGroup ? " group-start" : "");
+    th.className = "stat" + (statBoundary(id) ? " group-start" : "");
     th.dataset.statId = id;
     th.textContent = statLabel(id);
     th.title = `${statLabel(id)} · ${group}`;
     tr.appendChild(th);
-    prevGroup = group;
   });
 
   thead.innerHTML = "";
@@ -1443,13 +1633,12 @@ function makePlayerRow(r, roleLabel){
   tr.appendChild(tdName);
 
   const stats = visibleStatIds();
-  let prevGroup = null;
 
   stats.forEach(id => {
     const td = document.createElement("td");
     const group = statGroup(id);
 
-    td.className = "stat" + (group !== prevGroup ? " group-start" : "");
+    td.className = "stat" + (statBoundary(id) ? " group-start" : "");
     td.dataset.statId = id;
     td.id = cellId(r,id);
 
@@ -1519,7 +1708,6 @@ function makePlayerRow(r, roleLabel){
     });
 
     tr.appendChild(td);
-    prevGroup = group;
   });
 
   return tr;
@@ -1682,6 +1870,26 @@ function applyRosterTeam(team, text){
   return changed;
 }
 
+function setEditTab(tab){
+  const columnsActive = tab === "columns";
+  document.getElementById("columnsTabBtn").classList.toggle("active", columnsActive);
+  document.getElementById("saveLoadTabBtn").classList.toggle("active", !columnsActive);
+  document.getElementById("columnsTabPanel").classList.toggle("active", columnsActive);
+  document.getElementById("saveLoadTabPanel").classList.toggle("active", !columnsActive);
+  if(!columnsActive) generateBoardString();
+}
+
+function collectEditDraftControls(){
+  editDraftOrder.forEach(id => {
+    const visible = document.getElementById(`edit_visible_${id}`);
+    const group = document.getElementById(`edit_group_${id}`);
+    const boundary = document.getElementById(`edit_boundary_${id}`);
+    if(visible) editDraftVisible[id] = visible.checked;
+    if(group) editDraftGroups[id] = group.value;
+    if(boundary) editDraftBoundaries[id] = boundary.checked;
+  });
+}
+
 function buildEditBoard(){
   const editor = document.getElementById("columnEditor");
   editor.innerHTML = "";
@@ -1692,13 +1900,24 @@ function buildEditBoard(){
     if(!def) return;
 
     const row = document.createElement("div");
-    row.className = "columnRow" + (def.extra ? " extraStat" : "");
+    row.className = "columnRow" + (def.extra ? " extraStat" : "") + (id === movedEditId ? " justMoved" : "");
     row.dataset.id = id;
 
     const visible = document.createElement("input");
     visible.type = "checkbox";
     visible.id = `edit_visible_${id}`;
-    visible.checked = isStatVisible(id);
+    visible.checked = editDraftVisible[id] !== false;
+    visible.title = "Show this column";
+
+    const boundaryWrap = document.createElement("label");
+    boundaryWrap.className = "boundaryBox";
+    boundaryWrap.title = "Thick grey border before this column";
+
+    const boundary = document.createElement("input");
+    boundary.type = "checkbox";
+    boundary.id = `edit_boundary_${id}`;
+    boundary.checked = editDraftBoundaries[id] === true;
+    boundaryWrap.appendChild(boundary);
 
     const label = document.createElement("div");
     label.className = "columnLabel";
@@ -1710,7 +1929,7 @@ function buildEditBoard(){
       const opt = document.createElement("option");
       opt.value = g;
       opt.textContent = g;
-      if(statGroup(id) === g) opt.selected = true;
+      if((editDraftGroups[id] || def.group) === g) opt.selected = true;
       group.appendChild(opt);
     });
 
@@ -1718,29 +1937,189 @@ function buildEditBoard(){
     up.className = "smallMoveBtn";
     up.textContent = "↑";
     up.disabled = index === 0;
-    up.addEventListener("click", () => {
+    up.addEventListener("click", (e) => {
+      flashElement(e.currentTarget, 45);
       if(index <= 0) return;
+      collectEditDraftControls();
       [editDraftOrder[index - 1], editDraftOrder[index]] = [editDraftOrder[index], editDraftOrder[index - 1]];
+      movedEditId = id;
       buildEditBoard();
+      setTimeout(() => { movedEditId = null; buildEditBoard(); }, 260);
     });
 
     const down = document.createElement("button");
     down.className = "smallMoveBtn";
     down.textContent = "↓";
     down.disabled = index === editDraftOrder.length - 1;
-    down.addEventListener("click", () => {
+    down.addEventListener("click", (e) => {
+      flashElement(e.currentTarget, 45);
       if(index >= editDraftOrder.length - 1) return;
+      collectEditDraftControls();
       [editDraftOrder[index + 1], editDraftOrder[index]] = [editDraftOrder[index], editDraftOrder[index + 1]];
+      movedEditId = id;
       buildEditBoard();
+      setTimeout(() => { movedEditId = null; buildEditBoard(); }, 260);
     });
 
     row.appendChild(visible);
+    row.appendChild(boundaryWrap);
     row.appendChild(label);
     row.appendChild(group);
     row.appendChild(up);
     row.appendChild(down);
     editor.appendChild(row);
   });
+}
+
+function applyRVLPresetToDraft(){
+  editDraftOrder = DEFAULT_STAT_ORDER.slice();
+  STAT_DEFS.forEach(s => {
+    editDraftVisible[s.id] = !!s.defaultVisible;
+    editDraftGroups[s.id] = s.group;
+    editDraftBoundaries[s.id] = DEFAULT_BOUNDARY_IDS.has(s.id);
+  });
+  buildEditBoard();
+}
+
+function applyCritPresetToDraft(){
+  editDraftOrder = DEFAULT_STAT_ORDER.slice();
+  STAT_DEFS.forEach(s => {
+    editDraftVisible[s.id] = true;
+    editDraftGroups[s.id] = s.group;
+    editDraftBoundaries[s.id] = CRIT_BOUNDARY_IDS.has(s.id);
+  });
+  buildEditBoard();
+}
+
+function selectedSaveOptions(){
+  return {
+    namesTeams: document.getElementById("saveNamesTeams")?.checked !== false,
+    rosterRows: document.getElementById("saveRosterRows")?.checked !== false,
+    columns: document.getElementById("saveColumns")?.checked !== false,
+    stats: document.getElementById("saveStats")?.checked !== false
+  };
+}
+
+function packBoardState(options){
+  const payload = {
+    app:"RVL_STAT_GRID",
+    version:3,
+    createdAt:new Date().toISOString(),
+    includes:options
+  };
+
+  if(options.namesTeams){
+    payload.names = state.names.slice();
+    payload.teamAName = state.teamAName;
+    payload.teamBName = state.teamBName;
+    payload.teamAColor = state.teamAColor;
+    payload.teamBColor = state.teamBColor;
+  }
+
+  if(options.rosterRows){
+    payload.visible = state.visible.slice();
+  }
+
+  if(options.columns){
+    payload.scoreVisible = state.scoreVisible;
+    payload.scoreFlipped = state.scoreFlipped;
+    payload.controlsHidden = state.controlsHidden;
+    payload.statOrder = state.statOrder.slice();
+    payload.statVisible = {...state.statVisible};
+    payload.statGroups = {...state.statGroups};
+    payload.statBoundaries = {...state.statBoundaries};
+  }
+
+  if(options.stats){
+    payload.values = state.values.map(row => ({...row}));
+    payload.scoreA = state.scoreA;
+    payload.scoreB = state.scoreB;
+    payload.lastTouched = state.lastTouched ? {...state.lastTouched} : null;
+  }
+
+  return payload;
+}
+
+function encodeBoardState(payload){
+  return "RVLGRID:" + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+}
+
+function decodeBoardState(text){
+  const trimmed = text.trim();
+  if(!trimmed) throw new Error("Empty board string.");
+
+  const raw = trimmed.startsWith("RVLGRID:")
+    ? decodeURIComponent(escape(atob(trimmed.slice("RVLGRID:".length))))
+    : trimmed;
+
+  const parsed = JSON.parse(raw);
+  if(!parsed || parsed.app !== "RVL_STAT_GRID") throw new Error("This does not look like an RVL stat grid save string.");
+  return parsed;
+}
+
+function generateBoardString(){
+  const out = document.getElementById("stateExportText");
+  if(!out) return;
+  const payload = packBoardState(selectedSaveOptions());
+  out.value = encodeBoardState(payload);
+}
+
+function applyImportedBoard(payload){
+  const includes = payload.includes || {};
+
+  if(includes.namesTeams){
+    if(Array.isArray(payload.names)){
+      for(let i=0;i<TOTAL_ROWS;i++) state.names[i] = payload.names[i] || "";
+    }
+    if(typeof payload.teamAName === "string") state.teamAName = payload.teamAName;
+    if(typeof payload.teamBName === "string") state.teamBName = payload.teamBName;
+    if(typeof payload.teamAColor === "string") state.teamAColor = payload.teamAColor;
+    if(typeof payload.teamBColor === "string") state.teamBColor = payload.teamBColor;
+  }
+
+  if(includes.rosterRows && Array.isArray(payload.visible)){
+    for(let i=0;i<TOTAL_ROWS;i++) state.visible[i] = payload.visible[i] !== false;
+  }
+
+  if(includes.columns){
+    if(typeof payload.scoreVisible === "boolean") state.scoreVisible = payload.scoreVisible;
+    if(typeof payload.scoreFlipped === "boolean") state.scoreFlipped = payload.scoreFlipped;
+    if(typeof payload.controlsHidden === "boolean") state.controlsHidden = payload.controlsHidden;
+    if(Array.isArray(payload.statOrder)) state.statOrder = payload.statOrder.slice();
+    if(payload.statVisible && typeof payload.statVisible === "object") state.statVisible = {...state.statVisible, ...payload.statVisible};
+    if(payload.statGroups && typeof payload.statGroups === "object") state.statGroups = {...state.statGroups, ...payload.statGroups};
+    if(payload.statBoundaries && typeof payload.statBoundaries === "object") state.statBoundaries = {...state.statBoundaries, ...payload.statBoundaries};
+  }
+
+  if(includes.stats){
+    if(Array.isArray(payload.values)){
+      state.values = payload.values.map(row => ({...makeEmptyValueRow(), ...(row || {})}));
+    }
+    if(typeof payload.scoreA !== "undefined") state.scoreA = Number(payload.scoreA || 0);
+    if(typeof payload.scoreB !== "undefined") state.scoreB = Number(payload.scoreB || 0);
+    state.lastTouched = payload.lastTouched && STAT_BY_ID[payload.lastTouched.id] ? {...payload.lastTouched} : null;
+  }
+
+  normalizeState();
+  saveToLocal();
+  populateRosterEditor();
+  closeEditBoard();
+  render();
+}
+
+function loadBoardString(){
+  const text = document.getElementById("stateImportText").value;
+  let payload;
+  try{
+    payload = decodeBoardState(text);
+  }catch(err){
+    alert(err.message || "Could not read that board string.");
+    return;
+  }
+
+  const ok = confirm("Load this board string? This will overwrite any matching parts of the current board.");
+  if(!ok) return;
+  applyImportedBoard(payload);
 }
 
 function clearElementForReset(el){
@@ -1792,6 +2171,14 @@ function runDiagonalResetBoardAnimation(){
   clearLastTouchedImmediately();
   clearScoreFlash();
 
+  Object.assign(state, DEFAULT_STATE());
+  undoStack.length = 0;
+  redoStack.length = 0;
+  updateUndoRedoButtons();
+  saveToLocal();
+  populateRosterEditor();
+  render();
+
   const items = getDiagonalResetElements();
   let maxDelay = 0;
 
@@ -1804,21 +2191,34 @@ function runDiagonalResetBoardAnimation(){
     }, delay);
 
     setTimeout(() => {
-      clearElementForReset(el);
       endFlashToBase(el);
     }, delay + 48);
   });
+}
 
-  setTimeout(() => {
-    Object.assign(state, DEFAULT_STATE());
-    undoStack.length = 0;
-    redoStack.length = 0;
-    clearScoreFlash();
-    updateUndoRedoButtons();
-    saveToLocal();
-    populateRosterEditor();
-    render();
-  }, maxDelay + 460);
+function runResetStatsFlash(changedIds){
+  clearLastTouchedImmediately();
+  clearScoreFlash();
+
+  for(let r=0;r<TOTAL_ROWS;r++){
+    STAT_DEFS.forEach(s => setValue(r,s.id,0));
+  }
+  state.scoreA = 0;
+  state.scoreB = 0;
+  setLastTouched(null);
+  saveToLocal();
+  render();
+  updateUndoRedoButtons();
+
+  const ids = changedIds.filter(id => document.getElementById(id));
+  if(!ids.length) return;
+
+  ids.forEach((id, index) => {
+    const el = document.getElementById(id);
+    const delay = Math.min(180, index * 2);
+    setTimeout(() => startInstantFlash(el), delay);
+    setTimeout(() => endFlashToBase(el), delay + 50);
+  });
 }
 
 function toggleSettingsMenu(){
@@ -1867,7 +2267,13 @@ function closeResetModal(){
 function openEditBoard(){
   closeSettingsMenu();
   editDraftOrder = state.statOrder.slice();
+  editDraftVisible = {...state.statVisible};
+  editDraftGroups = {...state.statGroups};
+  editDraftBoundaries = {...state.statBoundaries};
+  movedEditId = null;
   buildEditBoard();
+  setEditTab("columns");
+  generateBoardString();
   editOverlay.style.display = "flex";
 }
 
@@ -2002,15 +2408,44 @@ function wireEvents(){
     });
   });
 
+  document.getElementById("columnsTabBtn").addEventListener("click", () => setEditTab("columns"));
+  document.getElementById("saveLoadTabBtn").addEventListener("click", () => setEditTab("saveLoad"));
+  document.getElementById("rvlPresetBtn").addEventListener("click", (e) => {
+    flashElement(e.currentTarget, 50);
+    applyRVLPresetToDraft();
+  });
+  document.getElementById("critPresetBtn").addEventListener("click", (e) => {
+    flashElement(e.currentTarget, 50);
+    applyCritPresetToDraft();
+  });
+  ["saveNamesTeams","saveRosterRows","saveColumns","saveStats"].forEach(id => {
+    document.getElementById(id).addEventListener("change", generateBoardString);
+  });
+  document.getElementById("generateStateBtn").addEventListener("click", (e) => {
+    flashElement(e.currentTarget, 50);
+    generateBoardString();
+  });
+  document.getElementById("copyStateBtn").addEventListener("click", async (e) => {
+    flashElement(e.currentTarget, 50);
+    generateBoardString();
+    const text = document.getElementById("stateExportText").value;
+    try{
+      await navigator.clipboard.writeText(text);
+    }catch(err){
+      document.getElementById("stateExportText").select();
+    }
+  });
+  document.getElementById("loadStateBtn").addEventListener("click", loadBoardString);
+
   document.getElementById("applyEditBoardBtn").addEventListener("click", ()=>{
+    collectEditDraftControls();
     state.scoreVisible = document.getElementById("scoreVisibleEdit").checked;
     state.statOrder = editDraftOrder.slice();
 
     STAT_DEFS.forEach(s => {
-      const visible = document.getElementById(`edit_visible_${s.id}`);
-      const group = document.getElementById(`edit_group_${s.id}`);
-      if(visible) state.statVisible[s.id] = visible.checked;
-      if(group) state.statGroups[s.id] = group.value;
+      state.statVisible[s.id] = editDraftVisible[s.id] !== false;
+      state.statGroups[s.id] = editDraftGroups[s.id] || s.group;
+      state.statBoundaries[s.id] = editDraftBoundaries[s.id] === true;
     });
 
     saveToLocal();
@@ -2039,46 +2474,7 @@ function wireEvents(){
 
     pushAction(action);
     closeResetModal();
-
-    if(changedIds.length){
-      changedIds.forEach(id => {
-        const el = document.getElementById(id);
-        startInstantFlash(el);
-      });
-
-      setTimeout(() => {
-        for(let r=0;r<TOTAL_ROWS;r++){
-          STAT_DEFS.forEach(s => {
-            setValue(r,s.id,0);
-            updateCellDisplay(r,s.id);
-          });
-        }
-        state.scoreA = 0;
-        state.scoreB = 0;
-        updateScoreDisplay();
-        setLastTouched(null);
-        recomputeDependencies();
-        saveToLocal();
-        updateUndoRedoButtons();
-
-        changedIds.forEach(id => {
-          const el = document.getElementById(id);
-          endFlashToBase(el);
-        });
-      }, 40);
-    } else {
-      for(let r=0;r<TOTAL_ROWS;r++){
-        STAT_DEFS.forEach(s => setValue(r,s.id,0));
-      }
-      state.scoreA = 0;
-      state.scoreB = 0;
-      updateScoreDisplay();
-      setLastTouched(null);
-      recomputeDependencies();
-      saveToLocal();
-      updateUndoRedoButtons();
-      render();
-    }
+    runResetStatsFlash(changedIds);
   });
 
   document.getElementById("resetBoardBtn").addEventListener("click", ()=>{
